@@ -8,7 +8,7 @@ require 'minitest/autorun'
 
 class TestMessageSequencer < MiniTest::Unit::TestCase
   def setup
-    @dir = Dir.mktmpdir
+    @dir = Dir.mktmpdir "funl-test-mseq-"
     @path = File.join(@dir, "sock")
     @logfile = File.join(@dir, "log")
   end

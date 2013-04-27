@@ -7,7 +7,7 @@ require 'minitest/autorun'
 
 class TestClientSequencer < MiniTest::Unit::TestCase
   def setup
-    @dir = Dir.mktmpdir
+    @dir = Dir.mktmpdir "funl-test-cseq-"
     @path = File.join(@dir, "sock")
     @sio = StringIO.new
   end
