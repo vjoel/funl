@@ -23,6 +23,11 @@ module Funl
     def initialize(*args)
       @client_id, @local_tick, @global_tick, @delta, @tags, @blob = *args
     end
+    
+    def self.[](
+      client: nil, local: nil, global: nil, delta: nil, tags: nil, blob: nil)
+      new client, local, global, delta, tags, blob
+    end
 
     def inspect
       d = delta ? "+#{delta}" : nil
