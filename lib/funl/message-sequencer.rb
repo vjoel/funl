@@ -55,7 +55,6 @@ module Funl
             log.debug {"readable = #{readable.inspect}"}
             begin
               msg = Message.from_msgpack(readable)
-              ## hangs if bad data or remote hangs (not problem with udp)
             rescue => ex #Errno::ECONNRESET, EOFError
               log.debug {"closing #{readable.inspect}: #{ex}"}
               @conns.delete readable

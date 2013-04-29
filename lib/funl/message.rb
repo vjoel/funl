@@ -79,7 +79,15 @@ module Funl
       end
     end
     
-    def self.from_msgpack(src)
+    def to_json
+      to_a.to_json
+    end
+
+    def self.from_serialized ary
+      new *ary
+    end
+
+    def self.from_msgpack(src) ## not used by ObjectStream
       case src
       when MessagePack::Unpacker
         new(*src.read) ## do this without allocating array?
