@@ -18,6 +18,12 @@ class TestMessage < MiniTest::Unit::TestCase
     m.blob = "BLOB"
   end
   
+  def test_from_serialized
+    a = m.to_a
+    m2 = Funl::Message.from_serialized a
+    assert_equal(m, m2)
+  end
+  
   def test_to_msgpack
     assert_kind_of(String, m.to_msgpack(nil))
     assert_kind_of(String, m.to_msgpack)
