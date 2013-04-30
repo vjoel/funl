@@ -1,6 +1,7 @@
 require 'logger'
 require 'msgpack'
 require 'funl/message'
+require 'object-stream'
 
 module Funl
   # Assigns a unique sequential ids to each message and relays it to its
@@ -11,15 +12,19 @@ module Funl
     attr_reader :conns
     attr_reader :tick
     attr_reader :log
+    attr_reader :stream_type
 
-    def initialize server, *conns, log: Logger.new($stderr)
+    def initialize server, *conns, log: Logger.new($stderr),
+        stream_type: ObjectStream::MSGPACK_TYPE
+
       @server = server
       @log = log
+      @stream_type = stream_type
 
       @tick = 0 ## read from file etc.
 
       @conns = conns.select do |conn|
-        write_succeeds? tick, conn and
+        write_succeeds? [tick], conn and
           log.info "connected #{conn.inspect}"
       end
     end
@@ -44,7 +49,7 @@ module Funl
             begin
               conn, addr = readable.accept_nonblock
               log.info "accepted #{conn.inspect} from #{addr.inspect}"
-              if write_succeeds? tick, conn
+              if write_succeeds? [tick], conn
                 @conns << conn
               end
             rescue IO::WaitReadable

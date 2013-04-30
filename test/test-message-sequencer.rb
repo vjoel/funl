@@ -27,17 +27,21 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
     3.times {a, b = UNIXSocket.pair; as << a; bs << b}
     mseq = MessageSequencer.new nil, *as, log: Logger.new(@logfile)
     bs.each_with_index do |b, i|
-      global_tick = MessagePack.unpack b
+      stream = ObjectStream.new(b, type: mseq.stream_type)
+      global_tick = stream.read[0]
       assert_equal 0, global_tick
     end
     assert_no_log_errors
   end
   
   def test_later_conns
+    stream_type = ObjectStream::MSGPACK_TYPE
+
     svr = UNIXServer.new(@path)
     pid = fork do
       begin
-        mseq = MessageSequencer.new svr, log: Logger.new(@logfile)
+        mseq = MessageSequencer.new svr, log: Logger.new(@logfile),
+          stream_type: stream_type
         mseq.start
         sleep
       rescue => ex
@@ -46,34 +50,37 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
       end
     end
     
-    conns = (0..2).map {UNIXSocket.new(@path)}
-    conns.each do |conn|
-      global_tick = MessagePack.unpack conn
+    streams = (0..2).map do
+      conn = UNIXSocket.new(@path)
+      stream = ObjectStream.new(conn, type: stream_type)
+      global_tick = stream.read[0]
       assert_equal 0, global_tick
+      stream
     end
     
     m1 = Message[
       client: 0, local: 12, global: 34,
       delta: 1, tags: ["foo"], blob: "BLOB"]
     
-    send_msg(src: conns[0], message: m1, dst: conns, expected_tick: 1)
+    send_msg(src: streams[0], message: m1, dst: streams, expected_tick: 1)
     
     m2 = Message[
       client: 1, local: 23, global: 45,
       delta: 4, tags: ["bar"], blob: "BLOB"]
     
-    send_msg(src: conns[1], message: m2, dst: conns, expected_tick: 2)
+    send_msg(src: streams[1], message: m2, dst: streams, expected_tick: 2)
     
     assert_no_log_errors
   ensure
-    Process.kill "TERM", pid
+    Process.kill "TERM", pid if pid
   end
 
   def send_msg(src: nil, message: nil, dst: nil, expected_tick: nil)
-    MessagePack.pack(message, src)
+    src << message
     
-    replies = dst.map do |conn|
-      Message.from_msgpack(conn)
+    replies = dst.map do |stream|
+      stream.expect Message
+      stream.read
     end
     
     replies.each do |r|
