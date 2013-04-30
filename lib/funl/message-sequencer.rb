@@ -1,5 +1,4 @@
 require 'logger'
-require 'msgpack'
 require 'funl/message'
 require 'object-stream'
 
@@ -9,7 +8,7 @@ module Funl
   class MessageSequencer
     attr_reader :server
     attr_reader :server_thread
-    attr_reader :conns
+    attr_reader :streams
     attr_reader :tick
     attr_reader :log
     attr_reader :stream_type
@@ -23,9 +22,18 @@ module Funl
 
       @tick = 0 ## read from file etc.
 
-      @conns = conns.select do |conn|
-        write_succeeds? [tick], conn and
-          log.info "connected #{conn.inspect}"
+      @streams = []
+      conns.each do |conn|
+        try_conn conn
+      end
+    end
+
+    def try_conn conn
+      stream = ObjectStream.new(conn, type: stream_type)
+      if write_succeeds? [tick], stream
+        log.info "connected #{stream.inspect}"
+        stream.expect Message
+        @streams << stream
       end
     end
 
@@ -41,7 +49,7 @@ module Funl
 
     def run
       loop do
-        readables, _ = select [server, *@conns]
+        readables, _ = select [server, *streams]
 
         readables.each do |readable|
           case readable
@@ -49,9 +57,7 @@ module Funl
             begin
               conn, addr = readable.accept_nonblock
               log.info "accepted #{conn.inspect} from #{addr.inspect}"
-              if write_succeeds? [tick], conn
-                @conns << conn
-              end
+              try_conn conn
             rescue IO::WaitReadable
               next
             end
@@ -59,10 +65,10 @@ module Funl
           else
             log.debug {"readable = #{readable.inspect}"}
             begin
-              msg = Message.from_msgpack(readable)
+              msg = readable.read
             rescue => ex #Errno::ECONNRESET, EOFError
               log.debug {"closing #{readable.inspect}: #{ex}"}
-              @conns.delete readable
+              @streams.delete readable
               readable.close unless readable.closed?
             else
               handle_message msg
@@ -80,17 +86,17 @@ module Funl
       @tick += 1
       msg.global_tick = tick
       msg.delta = nil
-      @conns.keep_if do |conn|
-        write_succeeds? msg, conn
+      @streams.keep_if do |stream|
+        write_succeeds? msg, stream
       end
     end
 
-    def write_succeeds? data, conn
-      MessagePack.pack data, conn
+    def write_succeeds? data, stream
+      stream << data
       true
     rescue => ex
-      log.debug {"closing #{conn.inspect}: #{ex}"}
-      conn.close unless conn.closed?
+      log.debug {"closing #{stream.inspect}: #{ex}"}
+      stream.close unless stream.closed?
       false
     end
   end
