@@ -1,5 +1,5 @@
 require 'logger'
-require 'msgpack'
+require 'object-stream'
 
 module Funl
   # Assigns unique ids to clients.
@@ -8,10 +8,14 @@ module Funl
     attr_reader :server_thread
     attr_reader :next_id
     attr_reader :log
+    attr_reader :stream_type
 
-    def initialize server, *conns, log: Logger.new($stderr)
+    def initialize server, *conns, log: Logger.new($stderr),
+        stream_type: ObjectStream::MSGPACK_TYPE
+
       @server = server
       @log = log
+      @stream_type = stream_type
 
       @next_id = 0 ## read from file etc.
 
@@ -42,13 +46,14 @@ module Funl
     end
 
     def handle_conn conn
-      MessagePack.pack next_id, conn
+      stream = ObjectStream.new(conn, type: stream_type)
+      stream << [next_id] # boxed for json
     rescue => ex
       log.error "write error for client #{next_id}: #{ex}"
     else
       log.info "recognized client #{next_id}"
     ensure
-      conn.close unless conn.closed?
+      stream.close if stream and not stream.closed?
       @next_id += 1
     end
   end
