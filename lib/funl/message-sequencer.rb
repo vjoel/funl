@@ -65,13 +65,18 @@ module Funl
           else
             log.debug {"readable = #{readable.inspect}"}
             begin
-              msg = readable.read
+              msgs = []
+              readable.read do |msg|
+                msgs << msg
+              end
             rescue => ex #Errno::ECONNRESET, EOFError
               log.debug {"closing #{readable.inspect}: #{ex}"}
               @streams.delete readable
               readable.close unless readable.closed?
             else
-              handle_message msg
+              msgs.each do |msg|
+                handle_message msg
+              end
             end
           end
         end
