@@ -73,10 +73,10 @@ module Funl
               log.debug {"closing #{readable.inspect}: #{ex}"}
               @streams.delete readable
               readable.close unless readable.closed?
-            else
-              msgs.each do |msg|
-                handle_message msg
-              end
+            end
+
+            msgs.each do |msg|
+              handle_message msg
             end
           end
         end
