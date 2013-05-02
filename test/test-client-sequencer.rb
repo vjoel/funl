@@ -18,8 +18,8 @@ class TestClientSequencer < MiniTest::Unit::TestCase
   
   def assert_no_log_errors
     @sio.rewind
-    log = @sio.read
-    assert_nil(log[/^E/], log)
+    loglines = @sio.read
+    assert_nil(loglines[/^E/], loglines)
   end
   
   def test_initial_conns

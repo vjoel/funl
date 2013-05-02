@@ -18,8 +18,8 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
   end
   
   def assert_no_log_errors
-    log = File.read(@logfile)
-    assert_nil(log[/^E/], log)
+    loglines = File.read(@logfile)
+    assert_nil(loglines[/^E/], loglines)
   end
   
   def test_initial_conns
@@ -36,11 +36,12 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
   
   def test_later_conns
     stream_type = ObjectStream::MSGPACK_TYPE
+    log = Logger.new(@logfile)
 
     svr = UNIXServer.new(@path)
     pid = fork do
       begin
-        mseq = MessageSequencer.new svr, log: Logger.new(@logfile),
+        mseq = MessageSequencer.new svr, log: log,
           stream_type: stream_type
         mseq.start
         sleep
