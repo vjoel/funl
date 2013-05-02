@@ -11,6 +11,7 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
     @dir = Dir.mktmpdir "funl-test-mseq-"
     @path = File.join(@dir, "sock")
     @logfile = File.join(@dir, "log")
+    @n_clients = 3
   end
   
   def teardown
@@ -24,7 +25,7 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
   
   def test_initial_conns
     as = []; bs = []
-    3.times {a, b = UNIXSocket.pair; as << a; bs << b}
+    @n_clients.times {a, b = UNIXSocket.pair; as << a; bs << b}
     mseq = MessageSequencer.new nil, *as, log: Logger.new(@logfile)
     bs.each_with_index do |b, i|
       stream = ObjectStream.new(b, type: mseq.stream_type)
@@ -51,7 +52,7 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
       end
     end
     
-    streams = (0..2).map do
+    streams = (0...@n_clients).map do
       conn = UNIXSocket.new(@path)
       stream = ObjectStream.new(conn, type: stream_type)
       global_tick = stream.read[0]
@@ -84,6 +85,8 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
       stream.read
     end
     
+    assert_equal @n_clients, replies.size
+
     replies.each do |r|
       assert_equal(message.client_id, r.client_id)
       assert_equal(message.local_tick, r.local_tick)
