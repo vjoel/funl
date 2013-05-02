@@ -35,7 +35,8 @@ module Funl
         
         stream.consume do |h|
           client_id = h["client_id"]
-          log.info "peer is client #{client_id}"
+          stream.peer_name = "client #{client_id}"
+          log.info "peer is #{stream.peer_name}"
         end
         stream.expect Message
         
@@ -69,16 +70,19 @@ module Funl
             end
 
           else
-            log.debug {"readable = #{readable.inspect}"}
+            log.debug {"readable = #{readable}"}
             begin
               msgs = []
               readable.read do |msg|
                 msgs << msg
               end
             rescue => ex #Errno::ECONNRESET, EOFError
-              log.debug {"closing #{readable.inspect}: #{ex}"}
+              log.debug {"closing #{readable}: #{ex}"}
               @streams.delete readable
               readable.close unless readable.closed?
+            else
+              log.debug {
+                "read #{msgs.size} messages from #{readable.peer_name}"}
             end
 
             msgs.each do |msg|
@@ -106,7 +110,7 @@ module Funl
       stream << data
       true
     rescue => ex
-      log.debug {"closing #{stream.inspect}: #{ex}"}
+      log.debug {"closing #{stream}: #{ex}"}
       stream.close unless stream.closed?
       false
     end
