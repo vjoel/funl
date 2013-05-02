@@ -46,7 +46,11 @@ module Funl
     end
 
     def stream_for io
-      ObjectStream.new(io, type: stream_type)
+      ObjectStream.new(io, type: stream_type).tap do |stream|
+        stream.write_to_buffer({"client_id" => client_id})
+          # client_id will be nil in the case of cseq, but that's ok
+          # because the remote never reads anyway.
+      end
     end
   end
 end

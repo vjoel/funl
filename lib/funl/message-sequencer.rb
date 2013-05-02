@@ -32,7 +32,13 @@ module Funl
       stream = ObjectStream.new(conn, type: stream_type)
       if write_succeeds? [tick], stream
         log.info "connected #{stream.inspect}"
+        
+        stream.consume do |h|
+          client_id = h["client_id"]
+          log.info "peer is client #{client_id}"
+        end
         stream.expect Message
+        
         @streams << stream
       end
     end
