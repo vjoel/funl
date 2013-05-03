@@ -7,6 +7,7 @@ module Funl
     attr_reader :stream_type
     attr_reader :client_id
     attr_reader :start_tick
+    attr_reader :blob_type
 
     # Returns +seq+, a stream to the sequencer. Child class must define an
     # initialize method that calls super and uses this return value.
@@ -28,11 +29,14 @@ module Funl
         cseq.close rescue nil; cseq = nil
       end
 
-      @seq_read_tick = proc do
-        @seq_read_tick = nil
-        log.info "getting start_tick from seq"
-        @start_tick = seq.read["tick"]
-        log.info "seq says start_tick = #{@start_tick}"
+      @seq_read_greeting = proc do
+        @seq_read_greeting = nil
+        log.info "getting greeting from seq"
+        greeting = seq.read
+        @start_tick = greeting["tick"]
+        log.info "start_tick = #{start_tick}"
+        @blob_type = greeting["blob"]
+        log.info "blob_type = #{blob_type}"
       end
 
       return seq
@@ -42,7 +46,7 @@ module Funl
     def start
       @cseq_read_client_id.call
       yield if block_given? # let client set log.progname
-      @seq_read_tick.call
+      @seq_read_greeting.call
     end
 
     def stream_for io

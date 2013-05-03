@@ -12,13 +12,20 @@ module Funl
     attr_reader :tick
     attr_reader :log
     attr_reader :stream_type
+    attr_reader :greeting
+    
+    DEFAULT_GREETING = {
+      "blob" => "msgpack"
+    }
 
     def initialize server, *conns, log: Logger.new($stderr),
-        stream_type: ObjectStream::MSGPACK_TYPE
+        stream_type: ObjectStream::MSGPACK_TYPE,
+        greeting: DEFAULT_GREETING
 
       @server = server
       @log = log
       @stream_type = stream_type
+      @greeting = greeting
 
       @tick = 0 ## read from file etc.
 
@@ -30,7 +37,8 @@ module Funl
 
     def try_conn conn
       stream = ObjectStream.new(conn, type: stream_type)
-      if write_succeeds?({"tick" => tick}, stream)
+      current_greeting = greeting.merge({"tick" => tick})
+      if write_succeeds?(current_greeting, stream)
         log.info "connected #{stream.inspect}"
         
         stream.consume do |h|
