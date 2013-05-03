@@ -51,5 +51,15 @@ module Funl
           # client_id will be nil in the case of cseq, but that's ok.
       end
     end
+
+    def server_stream_for io
+      ObjectStream.new(io, type: stream_type).tap do |stream|
+        stream.consume do |h|
+          client_id = h["client_id"]
+          stream.peer_name = "client #{client_id}"
+          log.info "peer is #{stream.peer_name}"
+        end
+      end
+    end
   end
 end
