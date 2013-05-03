@@ -6,6 +6,7 @@ module Funl
     attr_reader :log
     attr_reader :stream_type
     attr_reader :client_id
+    attr_reader :greeting
     attr_reader :start_tick
     attr_reader :blob_type
 
@@ -32,7 +33,7 @@ module Funl
       @seq_read_greeting = proc do
         @seq_read_greeting = nil
         log.info "getting greeting from seq"
-        greeting = seq.read
+        @greeting = seq.read
         @start_tick = greeting["tick"]
         log.info "start_tick = #{start_tick}"
         @blob_type = greeting["blob"]
