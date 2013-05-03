@@ -28,7 +28,7 @@ class TestClientSequencer < MiniTest::Unit::TestCase
     cseq = Funl::ClientSequencer.new nil, *as, log: Logger.new(@sio)
     bs.each_with_index do |b, i|
       stream = ObjectStream.new(b, type: cseq.stream_type)
-      client_id = stream.read[0]
+      client_id = stream.read["client_id"]
       assert_equal i, client_id
     end
     assert_no_log_errors
@@ -41,7 +41,7 @@ class TestClientSequencer < MiniTest::Unit::TestCase
     3.times do |i|
       conn = UNIXSocket.new(@path)
       stream = ObjectStream.new(conn, type: cseq.stream_type)
-      client_id = stream.read[0]
+      client_id = stream.read["client_id"]
       assert_equal i, client_id
     end
     assert_no_log_errors

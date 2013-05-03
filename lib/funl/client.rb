@@ -23,7 +23,7 @@ module Funl
       @cseq_read_client_id = proc do
         @cseq_read_client_id = nil
         log.info "getting client_id from cseq"
-        @client_id = cseq.read[0]
+        @client_id = cseq.read["client_id"]
         log.info "client_id = #{client_id}"
         cseq.close rescue nil; cseq = nil
       end
@@ -31,7 +31,7 @@ module Funl
       @seq_read_tick = proc do
         @seq_read_tick = nil
         log.info "getting start_tick from seq"
-        @start_tick = seq.read[0]
+        @start_tick = seq.read["tick"]
         log.info "seq says start_tick = #{@start_tick}"
       end
 

@@ -47,7 +47,7 @@ module Funl
 
     def handle_conn conn
       stream = ObjectStream.new(conn, type: stream_type)
-      stream << [next_id] # boxed for json
+      stream << {"client_id" => next_id}
     rescue => ex
       log.error "write error for client #{next_id}: #{ex}"
     else

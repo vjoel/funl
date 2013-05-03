@@ -30,7 +30,7 @@ module Funl
 
     def try_conn conn
       stream = ObjectStream.new(conn, type: stream_type)
-      if write_succeeds? [tick], stream
+      if write_succeeds?({"tick" => tick}, stream)
         log.info "connected #{stream.inspect}"
         
         stream.consume do |h|
