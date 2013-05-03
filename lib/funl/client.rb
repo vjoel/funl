@@ -25,7 +25,7 @@ module Funl
         log.info "getting client_id from cseq"
         @client_id = cseq.read[0]
         log.info "client_id = #{client_id}"
-        cseq.close; cseq = nil
+        cseq.close rescue nil; cseq = nil
       end
 
       @seq_read_tick = proc do
