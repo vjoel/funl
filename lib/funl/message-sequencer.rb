@@ -1,5 +1,6 @@
 require 'logger'
 require 'funl/message'
+require 'funl/blobber'
 require 'object-stream'
 
 module Funl
@@ -15,7 +16,7 @@ module Funl
     attr_reader :greeting
     
     DEFAULT_GREETING = {
-      "blob" => "msgpack"
+      "blob" => Funl::Blobber::MSGPACK_TYPE
     }
 
     def initialize server, *conns, log: Logger.new($stderr),

@@ -1,4 +1,5 @@
 require 'funl/client'
+require 'funl/blobber'
 require 'funl/message-sequencer'
 require 'funl/client-sequencer'
 require 'socket'
@@ -45,7 +46,7 @@ class TestClient < MiniTest::Unit::TestCase
     
     assert_equal(0, client.client_id)
     assert_equal(0, client.start_tick)
-    assert_equal("msgpack", client.blob_type)
+    assert_equal(Funl::Blobber::MSGPACK_TYPE, client.blob_type)
     
     # can't interact with seq unless subclass Client and use return
     # value of super in #initialize
