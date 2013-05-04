@@ -17,7 +17,7 @@ module Funl
 
     attr_accessor :tags
 
-    # Application-dependent payload data.
+    # Application-dependent payload data. See blobber.rb.
     attr_accessor :blob
     
     def initialize(*args)
