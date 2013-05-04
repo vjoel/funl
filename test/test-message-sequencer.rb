@@ -39,20 +39,19 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
   def test_later_conns
     stream_type = ObjectStream::MSGPACK_TYPE
     log = Logger.new(@logfile)
+    ## should be easier to turn this on:
+    #log = Logger.new($stderr)
+    #log.level = Logger::DEBUG
 
     svr = UNIXServer.new(@path)
     pid = fork do
-      begin
-        mseq = MessageSequencer.new svr, log: log,
-          stream_type: stream_type
-        mseq.start
-        sleep
-      rescue => ex
-        p ex
-        raise
-      end
+      log.progname = "mseq"
+      mseq = MessageSequencer.new svr, log: log,  stream_type: stream_type
+      mseq.start
+      sleep
     end
     
+    log.progname = "client"
     streams = (0...@n_clients).map do
       conn = UNIXSocket.new(@path)
       stream = ObjectStream.new(conn, type: stream_type)
