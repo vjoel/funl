@@ -1,12 +1,14 @@
 require 'logger'
+require 'funl/stream'
 require 'funl/message'
 require 'funl/blobber'
-require 'object-stream'
 
 module Funl
   # Assigns a unique sequential ids to each message and relays it to its
   # destinations.
   class MessageSequencer
+    include Funl::Stream
+
     attr_reader :server
     attr_reader :server_thread
     attr_reader :streams
@@ -37,18 +39,10 @@ module Funl
     end
 
     def try_conn conn
-      stream = ObjectStream.new(conn, type: stream_type)
+      stream = message_server_stream_for(conn)
       current_greeting = greeting.merge({"tick" => tick})
       if write_succeeds?(current_greeting, stream)
         log.info "connected #{stream.inspect}"
-        
-        stream.consume do |h|
-          client_id = h["client_id"]
-          stream.peer_name = "client #{client_id}"
-          log.info "peer is #{stream.peer_name}"
-        end
-        stream.expect Message
-        
         @streams << stream
       end
     end

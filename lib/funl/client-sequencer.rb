@@ -1,5 +1,6 @@
 require 'logger'
 require 'object-stream'
+require 'funl/stream'
 
 module Funl
   # Assigns unique ids to clients.

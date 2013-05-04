@@ -1,8 +1,10 @@
 require 'logger'
-require 'object-stream'
+require 'funl/stream'
 
 module Funl
   class Client
+    include Funl::Stream
+
     attr_reader :log
     attr_reader :stream_type
     attr_reader :client_id
@@ -19,8 +21,8 @@ module Funl
       @log = log
       @stream_type = stream_type ## discover this thru connections
 
-      seq = stream_for(seq)
-      cseq = stream_for(cseq)
+      seq = client_stream_for(seq)
+      cseq = client_stream_for(cseq)
 
       @cseq_read_client_id = proc do
         @cseq_read_client_id = nil
@@ -48,23 +50,6 @@ module Funl
       @cseq_read_client_id.call
       yield if block_given? # let client set log.progname
       @seq_read_greeting.call
-    end
-
-    def stream_for io
-      ObjectStream.new(io, type: stream_type).tap do |stream|
-        stream.write_to_object_buffer {{"client_id" => client_id}}
-          # client_id will be nil in the case of cseq, but that's ok.
-      end
-    end
-
-    def server_stream_for io
-      ObjectStream.new(io, type: stream_type).tap do |stream|
-        stream.consume do |h|
-          client_id = h["client_id"]
-          stream.peer_name = "client #{client_id}"
-          log.info "peer is #{stream.peer_name}"
-        end
-      end
     end
   end
 end
