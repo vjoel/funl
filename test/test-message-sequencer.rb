@@ -65,14 +65,14 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
     m1 = Message[
       client: 0, local: 12, global: 34,
       delta: 1, tags: ["foo"], blob: "BLOB"]
-    
     send_msg(src: streams[0], message: m1, dst: streams, expected_tick: 1)
     
-    m2 = Message[
-      client: 1, local: 23, global: 45,
-      delta: 4, tags: ["bar"], blob: "BLOB"]
-    
-    send_msg(src: streams[1], message: m2, dst: streams, expected_tick: 2)
+    if @n_clients > 1
+      m2 = Message[
+        client: 1, local: 23, global: 45,
+        delta: 4, tags: ["bar"], blob: "BLOB"]
+      send_msg(src: streams[1], message: m2, dst: streams, expected_tick: 2)
+    end
     
     assert_no_log_errors
   ensure
