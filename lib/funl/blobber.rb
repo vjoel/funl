@@ -1,9 +1,11 @@
+require 'object-stream'
+
 module Funl
   module Blobber
-    MARSHAL_TYPE  = "marshal"
-    YAML_TYPE     = "yaml"
-    JSON_TYPE     = "json"
-    MSGPACK_TYPE  = "msgpack"
+    MARSHAL_TYPE  = ObjectStream::MARSHAL_TYPE
+    YAML_TYPE     = ObjectStream::YAML_TYPE
+    JSON_TYPE     = ObjectStream::JSON_TYPE
+    MSGPACK_TYPE  = ObjectStream::MSGPACK_TYPE
     
     # Returns something which responds to #dump(obj) and #load(str).
     def self.for type
