@@ -26,7 +26,7 @@ module Funl
       @server = server
       @log = log
       @stream_type = stream_type
-      @greeting = greeting
+      @greeting = greeting.freeze # can't change after initial conns read it
 
       @tick = 0 ## read from file etc.
 
