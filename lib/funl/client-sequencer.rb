@@ -35,6 +35,10 @@ module Funl
       server_thread.kill if server_thread
     end
 
+    def wait
+      server_thread.join
+    end
+
     def run
       loop do
         conn = server.accept

@@ -117,7 +117,7 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
       stream.read
 
       mseq.stop
-      mseq.server_thread.join
+      mseq.wait
       saved_tick = mseq.tick
     end
 

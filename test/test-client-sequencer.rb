@@ -64,7 +64,7 @@ class TestClientSequencer < MiniTest::Unit::TestCase
       assert_equal i, client_id
 
       cseq.stop
-      cseq.server_thread.join
+      cseq.wait
       saved_next_id = cseq.next_id
     end
 
