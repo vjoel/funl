@@ -48,4 +48,28 @@ class TestClientSequencer < MiniTest::Unit::TestCase
   ensure
     cseq.stop rescue nil
   end
+
+  def test_persist
+    saved_next_id = 0
+    3.times do |i|
+      path = "#{@path}-#{i}"
+      svr = UNIXServer.new(path)
+      cseq = Funl::ClientSequencer.new svr, log: Logger.new(@sio),
+        next_id: saved_next_id
+      cseq.start
+
+      conn = UNIXSocket.new(path)
+      stream = ObjectStream.new(conn, type: cseq.stream_type)
+      client_id = stream.read["client_id"]
+      assert_equal i, client_id
+
+      cseq.stop
+      cseq.server_thread.join
+      saved_next_id = cseq.next_id
+    end
+
+    assert_no_log_errors
+  ensure
+    cseq.stop rescue nil
+  end
 end

@@ -12,13 +12,13 @@ module Funl
     attr_reader :stream_type
 
     def initialize server, *conns, log: Logger.new($stderr),
-        stream_type: ObjectStream::MSGPACK_TYPE
+        stream_type: ObjectStream::MSGPACK_TYPE,
+        next_id: 0
 
       @server = server
       @log = log
       @stream_type = stream_type
-
-      @next_id = 0 ## read from file etc.
+      @next_id = next_id
 
       conns.each do |conn|
         handle_conn conn
