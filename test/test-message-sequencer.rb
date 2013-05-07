@@ -97,4 +97,32 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
       assert_equal(message.blob, r.blob)
     end
   end
+
+  def test_persist
+    saved_tick = 0
+    3.times do |i|
+      path = "#{@path}-#{i}"
+      svr = UNIXServer.new(path)
+      mseq = Funl::MessageSequencer.new svr, log: Logger.new(@logfile),
+        tick: saved_tick
+      mseq.start
+
+      conn = UNIXSocket.new(path)
+      stream = ObjectStream.new(conn, type: mseq.stream_type)
+      stream.write_to_outbox{{"client_id" => "test_persist"}} # not needed
+      tick = stream.read["tick"]
+      assert_equal i, tick
+
+      stream.write Message.new
+      stream.read
+
+      mseq.stop
+      mseq.server_thread.join
+      saved_tick = mseq.tick
+    end
+
+    assert_no_log_errors
+  ensure
+    mseq.stop rescue nil
+  end
 end

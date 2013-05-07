@@ -23,14 +23,14 @@ module Funl
 
     def initialize server, *conns, log: Logger.new($stderr),
         stream_type: ObjectStream::MSGPACK_TYPE,
-        greeting: DEFAULT_GREETING
+        greeting: DEFAULT_GREETING,
+        tick: 0
 
       @server = server
       @log = log
       @stream_type = stream_type
       @greeting = greeting.freeze # can't change after initial conns read it
-
-      @tick = 0 ## read from file etc.
+      @tick = tick
 
       @streams = []
       conns.each do |conn|
