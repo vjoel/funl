@@ -2,6 +2,8 @@ require 'logger'
 require 'funl/stream'
 
 module Funl
+  # Generic client base class. Manages the setup and handshake on the streams
+  # to the client sequencer and the message sequencer.
   class Client
     include Funl::Stream
 
@@ -46,9 +48,12 @@ module Funl
         # don't keep seq in ivar, in case we are delegating (e.g. to worker)
     end
 
+    # Handshake with both cseq and seq. Does not start any threads--that is left
+    # to subclasses. Yields after getting client id so that caller can set
+    # log.progname, for example.
     def start
       @cseq_read_client_id.call
-      yield if block_given? # let client set log.progname
+      yield if block_given?
       @seq_read_greeting.call
     end
   end

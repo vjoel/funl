@@ -15,9 +15,10 @@ module Funl
     # messages are pipelined, delta > 1.
     attr_accessor :delta
 
+    # Application-defined metadata. May be used for filtering etc.
     attr_accessor :tags
 
-    # Application-dependent payload data. See blobber.rb.
+    # Application-defined payload data. See blobber.rb.
     attr_accessor :blob
     
     def initialize(*args)
