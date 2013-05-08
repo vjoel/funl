@@ -52,6 +52,8 @@ class TestClientSequencer < MiniTest::Unit::TestCase
   def test_persist
     saved_next_id = 0
     3.times do |i|
+      assert_equal i, saved_next_id
+
       path = "#{@path}-#{i}"
       svr = UNIXServer.new(path)
       cseq = Funl::ClientSequencer.new svr, log: Logger.new(@sio),

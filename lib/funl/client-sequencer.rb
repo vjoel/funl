@@ -52,14 +52,15 @@ module Funl
 
     def handle_conn conn
       stream = ObjectStream.new(conn, type: stream_type)
-      stream << {"client_id" => next_id}
+      msg = {"client_id" => next_id}
+      @next_id += 1
+      stream << msg
     rescue => ex
       log.error "write error for client #{next_id}: #{ex}"
     else
       log.info "recognized client #{next_id}"
     ensure
       stream.close if stream and not stream.closed?
-      @next_id += 1
     end
   end
 end
