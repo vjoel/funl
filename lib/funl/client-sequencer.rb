@@ -62,5 +62,6 @@ module Funl
     ensure
       stream.close if stream and not stream.closed?
     end
+    private :handle_conn
   end
 end

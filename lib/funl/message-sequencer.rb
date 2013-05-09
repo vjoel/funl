@@ -46,6 +46,7 @@ module Funl
         @streams << stream
       end
     end
+    private :try_conn
 
     def start
       @server_thread = Thread.new do
@@ -112,6 +113,7 @@ module Funl
         write_succeeds? msg, stream
       end
     end
+    private :handle_message
 
     def write_succeeds? data, stream
       stream << data
@@ -121,5 +123,6 @@ module Funl
       stream.close unless stream.closed?
       false
     end
+    private :write_succeeds?
   end
 end
