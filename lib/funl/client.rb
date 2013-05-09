@@ -42,6 +42,7 @@ module Funl
         log.info "start_tick = #{start_tick}"
         @blob_type = greeting["blob"]
         log.info "blob_type = #{blob_type}"
+        seq.expect Message
       end
 
       return seq
