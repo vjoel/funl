@@ -66,7 +66,7 @@ module Funl
     def to_msgpack(pk = nil)
       case pk
       when MessagePack::Packer
-        pk.write_array_header(6) ## redundant, unless omit delta / tags
+        pk.write_array_header(6)
         pk.write @client_id
         pk.write @local_tick
         pk.write @global_tick
@@ -88,10 +88,10 @@ module Funl
       new *ary
     end
 
-    def self.from_msgpack(src) ## not used by ObjectStream
+    def self.from_msgpack(src)
       case src
       when MessagePack::Unpacker
-        new(*src.read) ## do this without allocating array?
+        new(*src.read)
       
       when IO, StringIO
         from_msgpack(MessagePack::Unpacker.new(src))
