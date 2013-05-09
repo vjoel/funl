@@ -100,7 +100,10 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
 
   def test_persist
     saved_tick = 0
+    n_write = 0
     3.times do |i|
+      assert_equal n_write, saved_tick
+
       path = "#{@path}-#{i}"
       svr = UNIXServer.new(path)
       mseq = Funl::MessageSequencer.new svr, log: Logger.new(@logfile),
@@ -111,10 +114,11 @@ class TestMessageSequencer < MiniTest::Unit::TestCase
       stream = ObjectStream.new(conn, type: mseq.stream_type)
       stream.write_to_outbox{{"client_id" => "test_persist"}} # not needed
       tick = stream.read["tick"]
-      assert_equal i, tick
+      assert_equal n_write, tick
 
       stream.write Message.new
       stream.read
+      n_write += 1
 
       mseq.stop
       mseq.wait
