@@ -14,6 +14,7 @@ module Funl
     attr_reader :client_id
     attr_reader :greeting
     attr_reader :start_tick
+    attr_reader :blob_type
     attr_reader :blobber
 
     # Returns +seq+, a stream to the sequencer. Child class must define an
@@ -42,7 +43,7 @@ module Funl
         @greeting = seq.read
         @start_tick = greeting["tick"]
         log.info "start_tick = #{start_tick}"
-        blob_type = greeting["blob"]
+        @blob_type = greeting["blob"]
         log.info "blob_type = #{blob_type}"
         @blobber = Blobber.for(blob_type)
         seq.expect Message
