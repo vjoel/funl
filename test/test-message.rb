@@ -5,7 +5,7 @@ require 'msgpack'
 
 require 'minitest/autorun'
 
-class TestMessage < MiniTest::Unit::TestCase
+class TestMessage < Minitest::Test
   attr_reader :m, :sio
   
   def setup

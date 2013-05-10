@@ -5,7 +5,7 @@ require 'stringio'
 
 require 'minitest/autorun'
 
-class TestClientSequencer < MiniTest::Unit::TestCase
+class TestClientSequencer < Minitest::Test
   def setup
     @dir = Dir.mktmpdir "funl-test-cseq-"
     @path = File.join(@dir, "sock")

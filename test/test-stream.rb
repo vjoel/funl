@@ -5,7 +5,7 @@ require 'logger'
 
 require 'minitest/autorun'
 
-class TestStream < MiniTest::Unit::TestCase
+class TestStream < Minitest::Test
   include Funl::Stream
   
   attr_reader :client_id

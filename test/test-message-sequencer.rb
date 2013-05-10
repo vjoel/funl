@@ -6,7 +6,7 @@ include Funl
 
 require 'minitest/autorun'
 
-class TestMessageSequencer < MiniTest::Unit::TestCase
+class TestMessageSequencer < Minitest::Test
   def setup
     @dir = Dir.mktmpdir "funl-test-mseq-"
     @path = File.join(@dir, "sock")

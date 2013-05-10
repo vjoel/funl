@@ -9,7 +9,7 @@ include Funl
 
 require 'minitest/autorun'
 
-class TestClient < MiniTest::Unit::TestCase
+class TestClient < Minitest::Test
   def setup
     @dir = Dir.mktmpdir "funl-test-client-"
     @cseq_path = File.join(@dir, "cseq")
