@@ -32,6 +32,7 @@ module Funl
 
       @seq = client_stream_for(seq)
       @cseq = client_stream_for(cseq)
+      @arcio = arc
     end
 
     # Handshake with both cseq and seq. Does not start any threads--that is left
@@ -61,7 +62,7 @@ module Funl
       @blobber = Blobber.for(blob_type)
       seq.expect message_class
 
-      @arc = arc && client_stream_for(arc, type: blob_type)
+      @arc = @arcio && client_stream_for(@arcio, type: blob_type)
         # note: @arc is nil when client is the archiver itself
     end
 
