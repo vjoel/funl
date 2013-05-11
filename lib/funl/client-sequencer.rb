@@ -55,7 +55,7 @@ module Funl
       msg = {"client_id" => next_id}
       @next_id += 1
       stream << msg
-    rescue => ex
+    rescue IOError, SystemCallError => ex
       log.error "write error for client #{next_id}: #{ex}"
     else
       log.info "recognized client #{next_id}"

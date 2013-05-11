@@ -87,7 +87,7 @@ module Funl
               readable.read do |msg|
                 msgs << msg
               end
-            rescue => ex #Errno::ECONNRESET, EOFError
+            rescue IOError, SystemCallError => ex
               log.debug {"closing #{readable}: #{ex}"}
               @streams.delete readable
               readable.close unless readable.closed?
@@ -121,7 +121,7 @@ module Funl
     def write_succeeds? data, stream
       stream << data
       true
-    rescue => ex
+    rescue IOError, SystemCallError => ex
       log.debug {"closing #{stream}: #{ex}"}
       stream.close unless stream.closed?
       false
