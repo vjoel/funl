@@ -1,6 +1,7 @@
 require 'object-stream'
 
 module Funl
+  # Mixin depends on stream_type, log, client_id, message_class.
   module Stream
     def client_stream_for io, type: stream_type
       ObjectStream.new(io, type: type).tap do |stream|
@@ -25,7 +26,7 @@ module Funl
           client_id = h["client_id"]
           stream.peer_name = "client #{client_id}"
           log.info "peer is #{stream.peer_name}"
-          stream.expect Message # note: add expectation inside consume block
+          stream.expect message_class
         end
       end
     end

@@ -15,6 +15,7 @@ module Funl
     attr_reader :tick
     attr_reader :log
     attr_reader :stream_type
+    attr_reader :message_class
     attr_reader :greeting
     
     DEFAULT_GREETING = {
@@ -23,12 +24,14 @@ module Funl
 
     def initialize server, *conns, log: Logger.new($stderr),
         stream_type: ObjectStream::MSGPACK_TYPE,
+        message_class: Message,
         greeting: DEFAULT_GREETING,
         tick: 0
 
       @server = server
       @log = log
       @stream_type = stream_type
+      @message_class = message_class
       @greeting = greeting.freeze # can't change after initial conns read it
       @tick = tick
 

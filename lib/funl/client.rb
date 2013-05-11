@@ -9,57 +9,65 @@ module Funl
   class Client
     include Funl::Stream
 
+    attr_reader :seq
+    attr_reader :cseq
+    attr_reader :arc
     attr_reader :log
     attr_reader :stream_type
+    attr_reader :message_class
     attr_reader :client_id
     attr_reader :greeting
     attr_reader :start_tick
     attr_reader :blob_type
     attr_reader :blobber
 
-    # Returns +seq+, a stream to the sequencer. Child class must define an
-    # initialize method that calls super and uses this return value.
-    def initialize(seq: seq!, cseq: cseq!,
+    def initialize(seq: seq!, cseq: cseq!, arc: nil,
           log: Logger.new($stderr),
-          stream_type: ObjectStream::MSGPACK_TYPE)
+          stream_type: ObjectStream::MSGPACK_TYPE,
+          message_class: Message)
 
       @log = log
       @stream_type = stream_type ## discover this thru connections
+      @message_class = message_class
 
-      seq = client_stream_for(seq)
-      cseq = client_stream_for(cseq)
-
-      @cseq_read_client_id = proc do
-        @cseq_read_client_id = nil
-        log.info "getting client_id from cseq"
-        @client_id = cseq.read["client_id"]
-        log.info "client_id = #{client_id}"
-        cseq.close rescue nil; cseq = nil
-      end
-
-      @seq_read_greeting = proc do
-        @seq_read_greeting = nil
-        log.info "getting greeting from seq"
-        @greeting = seq.read
-        @start_tick = greeting["tick"]
-        log.info "start_tick = #{start_tick}"
-        @blob_type = greeting["blob"]
-        log.info "blob_type = #{blob_type}"
-        @blobber = Blobber.for(blob_type)
-        seq.expect Message
-      end
-
-      return seq
-        # don't keep seq in ivar, in case we are delegating (e.g. to worker)
+      @seq = client_stream_for(seq)
+      @cseq = client_stream_for(cseq)
     end
 
     # Handshake with both cseq and seq. Does not start any threads--that is left
     # to subclasses. Yields after getting client id so that caller can set
     # log.progname, for example.
     def start
-      @cseq_read_client_id.call
+      cseq_read_client_id
       yield if block_given?
-      @seq_read_greeting.call
+      seq_read_greeting
+    end
+
+    def cseq_read_client_id
+      log.info "getting client_id from cseq"
+      @client_id = cseq.read["client_id"]
+      log.info "client_id = #{client_id}"
+      cseq.close rescue nil
+      @cseq = nil
+    end
+
+    def seq_read_greeting
+      log.info "getting greeting from seq"
+      @greeting = seq.read
+      @start_tick = greeting["tick"]
+      log.info "start_tick = #{start_tick}"
+      @blob_type = greeting["blob"]
+      log.info "blob_type = #{blob_type}"
+      @blobber = Blobber.for(blob_type)
+      seq.expect message_class
+
+      @arc = arc && client_stream_for(arc, type: blob_type)
+        # note: @arc is nil when client is the archiver itself
+    end
+
+    def arc_server_stream_for io
+      server_stream_for(io, type: blob_type)
+        # note: blob_type, not stream_type, since we are sending bare objects
     end
   end
 end
