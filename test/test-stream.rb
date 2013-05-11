@@ -12,14 +12,14 @@ class TestStream < Minitest::Test
   attr_reader :stream_type
   attr_reader :message_class
   attr_reader :log
-  
+
   def setup
     # for the Stream mixin:
     @client_id = 42
     @stream_type = ObjectStream::MSGPACK_TYPE
     @message_class = Funl::Message
-    @logio = StringIO.new
-    @log = Logger.new(@logio)
+    @log = Logger.new($stderr)
+    log.level = Logger::WARN
 
     @sio = StringIO.new
   end

@@ -10,25 +10,21 @@ include Funl
 require 'minitest/autorun'
 
 class TestClient < Minitest::Test
+  attr_reader :log
+
   def setup
     @dir = Dir.mktmpdir "funl-test-client-"
     @cseq_path = File.join(@dir, "cseq")
     @seq_path = File.join(@dir, "seq")
-    @logfile = File.join(@dir, "log")
+    @log = Logger.new($stderr)
+    log.level = Logger::WARN
   end
   
   def teardown
     FileUtils.remove_entry @dir
   end
   
-  def assert_no_log_errors
-    loglines = File.read(@logfile)
-    assert_nil(loglines[/^E/], loglines)
-  end
-  
   def test_client
-    log = Logger.new(@logfile)
-    
     cseq_sock = UNIXServer.new(@cseq_path)
     cseq = ClientSequencer.new cseq_sock, log: log
     cseq.start
@@ -47,11 +43,6 @@ class TestClient < Minitest::Test
     assert_equal(0, client.client_id)
     assert_equal(0, client.start_tick)
     assert_equal(Funl::Blobber::MSGPACK_TYPE, client.blob_type)
-    
-    # can't interact with seq unless subclass Client and use return
-    # value of super in #initialize
-    
-    assert_no_log_errors
   ensure
     cseq.stop rescue nil
     seq.stop rescue nil

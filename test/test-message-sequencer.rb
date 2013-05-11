@@ -7,10 +7,13 @@ include Funl
 require 'minitest/autorun'
 
 class TestMessageSequencer < Minitest::Test
+  attr_reader :log
+
   def setup
     @dir = Dir.mktmpdir "funl-test-mseq-"
     @path = File.join(@dir, "sock")
-    @logfile = File.join(@dir, "log")
+    @log = Logger.new($stderr)
+    log.level = Logger::WARN
     @n_clients = 3
   end
   
@@ -18,31 +21,20 @@ class TestMessageSequencer < Minitest::Test
     FileUtils.remove_entry @dir
   end
   
-  def assert_no_log_errors
-    loglines = File.read(@logfile)
-    assert_nil(loglines[/^E/], loglines)
-  end
-  
   def test_initial_conns
     as = []; bs = []
     @n_clients.times {a, b = UNIXSocket.pair; as << a; bs << b}
-    mseq = MessageSequencer.new nil, *as, log: Logger.new(@logfile)
+    mseq = MessageSequencer.new nil, *as, log: log
     bs.each_with_index do |b, i|
       stream = ObjectStream.new(b, type: mseq.stream_type)
       stream.write_to_outbox({"client_id" => "test_initial_conns #{i}"})
       global_tick = stream.read["tick"]
       assert_equal 0, global_tick
     end
-    assert_no_log_errors
   end
   
   def test_later_conns
     stream_type = ObjectStream::MSGPACK_TYPE
-    log = Logger.new(@logfile)
-    ## should be easier to turn this on:
-    #log = Logger.new($stderr)
-    #log.level = Logger::DEBUG
-
     svr = UNIXServer.new(@path)
     pid = fork do
       log.progname = "mseq"
@@ -73,7 +65,6 @@ class TestMessageSequencer < Minitest::Test
       send_msg(src: streams[1], message: m2, dst: streams, expected_tick: 2)
     end
     
-    assert_no_log_errors
   ensure
     Process.kill "TERM", pid if pid
   end
@@ -106,7 +97,7 @@ class TestMessageSequencer < Minitest::Test
 
       path = "#{@path}-#{i}"
       svr = UNIXServer.new(path)
-      mseq = Funl::MessageSequencer.new svr, log: Logger.new(@logfile),
+      mseq = Funl::MessageSequencer.new svr, log: log,
         tick: saved_tick
       mseq.start
 
@@ -125,7 +116,6 @@ class TestMessageSequencer < Minitest::Test
       saved_tick = mseq.tick
     end
 
-    assert_no_log_errors
   ensure
     mseq.stop rescue nil
   end
