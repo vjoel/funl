@@ -16,29 +16,33 @@ module Funl
     attr_reader :log
     attr_reader :stream_type
     attr_reader :message_class
+    attr_reader :blob_type
     attr_reader :greeting
     
-    DEFAULT_GREETING = {
-      "blob" => Funl::Blobber::MSGPACK_TYPE
-    }.freeze
-
     def initialize server, *conns, log: Logger.new($stderr),
         stream_type: ObjectStream::MSGPACK_TYPE,
         message_class: Message,
-        greeting: DEFAULT_GREETING,
+        blob_type: Blobber::MSGPACK_TYPE,
         tick: 0
 
       @server = server
       @log = log
       @stream_type = stream_type
       @message_class = message_class
-      @greeting = greeting.freeze # can't change after initial conns read it
+      @blob_type = blob_type
+      @greeting = default_greeting
       @tick = tick
 
       @streams = []
       conns.each do |conn|
         try_conn conn
       end
+    end
+
+    def default_greeting
+      {
+        "blob" => blob_type
+      }.freeze # can't change after initial conns read it
     end
 
     def try_conn conn
