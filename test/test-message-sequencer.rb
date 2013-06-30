@@ -26,7 +26,7 @@ class TestMessageSequencer < Minitest::Test
     @n_clients.times {a, b = UNIXSocket.pair; as << a; bs << b}
     mseq = MessageSequencer.new nil, *as, log: log
     bs.each_with_index do |b, i|
-      stream = ObjectStream.new(b, type: mseq.stream_type)
+      stream = ObjectStreamWrapper.new(b, type: mseq.stream_type)
       stream.write_to_outbox({"client_id" => "test_initial_conns #{i}"})
       global_tick = stream.read["tick"]
       assert_equal 0, global_tick
@@ -46,7 +46,7 @@ class TestMessageSequencer < Minitest::Test
     log.progname = "client"
     streams = (0...@n_clients).map do
       conn = UNIXSocket.new(@path)
-      stream = ObjectStream.new(conn, type: stream_type)
+      stream = ObjectStreamWrapper.new(conn, type: stream_type)
       stream.write_to_outbox{{"client_id" => "test_later_conns"}}
       global_tick = stream.read["tick"]
       assert_equal 0, global_tick
@@ -102,7 +102,7 @@ class TestMessageSequencer < Minitest::Test
       mseq.start
 
       conn = UNIXSocket.new(path)
-      stream = ObjectStream.new(conn, type: mseq.stream_type)
+      stream = ObjectStreamWrapper.new(conn, type: mseq.stream_type)
       stream.write_to_outbox{{"client_id" => "test_persist"}} # not needed
       tick = stream.read["tick"]
       assert_equal n_write, tick
