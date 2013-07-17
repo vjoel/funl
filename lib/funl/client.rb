@@ -45,7 +45,7 @@ module Funl
     end
 
     def cseq_read_client_id
-      log.info "getting client_id from cseq"
+      log.debug "getting client_id from cseq"
       @client_id = cseq.read["client_id"]
       log.info "client_id = #{client_id}"
       cseq.close rescue nil
@@ -53,7 +53,7 @@ module Funl
     end
 
     def seq_read_greeting
-      log.info "getting greeting from seq"
+      log.debug "getting greeting from seq"
       @greeting = seq.read
       @start_tick = greeting["tick"]
       log.info "start_tick = #{start_tick}"
