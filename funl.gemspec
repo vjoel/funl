@@ -1,10 +1,12 @@
+require 'funl/version'
+
 Gem::Specification.new do |s|
   s.name = "funl"
-  s.version = "0.1"
+  s.version = Funl::VERSION
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0")
   s.authors = ["Joel VanderWerf"]
-  s.date = "2013-07-12"
+  s.date = Time.now.strftime "%Y-%m-%d"
   s.description = "Sequences messages."
   s.email = "vjoel@users.sourceforge.net"
   s.extra_rdoc_files = ["README.md", "COPYING"]
@@ -18,7 +20,9 @@ Gem::Specification.new do |s|
   s.test_files = Dir["test/*.rb"]
   s.homepage = "https://github.com/vjoel/funl"
   s.license = "BSD"
-  s.rdoc_options = ["--quiet", "--line-numbers", "--inline-source", "--title", "funl", "--main", "README.md"]
+  s.rdoc_options = [
+    "--quiet", "--line-numbers", "--inline-source",
+    "--title", "funl", "--main", "README.md"]
   s.require_paths = ["lib"]
   s.summary = "Sequences messages"
 
