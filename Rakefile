@@ -17,11 +17,22 @@ end
 
 desc "commit, tag, and push repo; build and push gem"
 task :release do
+  require 'tempfile'
+  
   tag = "#{prj}-#{version}"
 
   sh "gem build #{prj}.gemspec"
 
-  sh "git commit -a -m 'release #{version}'"
+  file = Tempfile.new "template"
+  begin
+    file.puts "release #{version}"
+    file.close
+    sh "git commit -a -v -t #{file.path}"
+  ensure
+    file.close unless file.closed?
+    file.unlink
+  end
+
   sh "git tag #{prj}-#{version}"
   sh "git push"
   sh "git push --tags"
