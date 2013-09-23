@@ -49,8 +49,8 @@ module Funl
       stream = message_server_stream_for(conn)
       current_greeting = greeting.merge({"tick" => tick})
       if write_succeeds?(current_greeting, stream)
-        log.debug "connected #{stream.inspect}"
-        @streams << stream
+        log.debug {"connected #{stream.inspect}"}
+        streams << stream
       end
     end
     private :try_conn
@@ -78,7 +78,7 @@ module Funl
           when server
             begin
               conn, addr = readable.accept_nonblock
-              log.debug "accepted #{conn.inspect} from #{addr.inspect}"
+              log.debug {"accepted #{conn.inspect} from #{addr.inspect}"}
               try_conn conn
             rescue IO::WaitReadable
               next
