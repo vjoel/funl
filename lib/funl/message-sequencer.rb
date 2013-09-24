@@ -18,6 +18,7 @@ module Funl
     attr_reader :message_class
     attr_reader :blob_type
     attr_reader :greeting
+    attr_reader :subscribers
     
     def initialize server, *conns, log: Logger.new($stderr),
         stream_type: ObjectStream::MSGPACK_TYPE,
@@ -37,6 +38,10 @@ module Funl
       conns.each do |conn|
         try_conn conn
       end
+      
+      @subscribers_to_all = [] # [conn, ...]
+      @subscribers = Hash.new {|h, tag| h[tag] = []} # tag => [conn, ...]
+      @tags = Hash.new {|h, conn| h[conn] = []} # conn => [tag, ...]
     end
 
     def default_greeting
@@ -93,15 +98,18 @@ module Funl
               end
             rescue IOError, SystemCallError => ex
               log.debug {"closing #{readable}: #{ex}"}
-              @streams.delete readable
-              readable.close unless readable.closed?
+              reject_stream readable
             else
               log.debug {
                 "read #{msgs.size} messages from #{readable.peer_name}"}
             end
 
             msgs.each do |msg|
-              handle_message msg
+              if msg.control?
+                handle_control readable, *msg.control_op
+              else
+                handle_message msg
+              end
             end
           end
         end
@@ -111,12 +119,56 @@ module Funl
       raise
     end
 
+    def handle_control stream, op_type, tags = nil
+      log.debug {"#{stream} #{op_type} #{tags}"}
+
+      case op_type
+      when "subscribe_to_all"
+        @subscribers_to_all += [stream]
+        ack = Message.control(op_type)
+        ack.global_tick = tick
+        write_succeeds?(ack, stream)
+      
+      when "subscribe"
+        tags.each do |tag|
+          @subscribers[tag] += [stream]
+        end
+        @tags[stream] += tags
+        ack = Message.control(op_type, tags)
+        ack.global_tick = tick
+        write_succeeds?(ack, stream)
+
+      when "unsubscribe_from_all"
+        @subscribers_to_all.delete? stream
+
+      when "unsubscribe"
+        tags.each do |tag|
+          @subscribers[tag].delete stream
+        end
+        @tags[stream] -= tags
+
+      else
+        log.error "bad operation: #{op_type.inspect}"
+        return
+      end
+    end
+
     def handle_message msg
       log.debug {"handling message #{msg.inspect}"}
+
       @tick += 1
       msg.global_tick = tick
       msg.delta = nil
-      @streams.keep_if do |stream|
+
+      tags = msg.tags
+      dest_streams =
+        if !tags or (tags.empty? rescue true)
+          @subscribers_to_all.dup
+        else
+          tags.inject(@subscribers_to_all) {|a,tag| a + @subscribers[tag]}
+        end
+
+      dest_streams.each do |stream|
         write_succeeds? msg, stream
       end
     end
@@ -127,9 +179,23 @@ module Funl
       true
     rescue IOError, SystemCallError => ex
       log.debug {"closing #{stream}: #{ex}"}
-      stream.close unless stream.closed?
+      reject_stream stream
       false
     end
     private :write_succeeds?
+  end
+
+  def reject_stream stream
+    stream.close unless stream.closed?
+    if streams.include? stream
+      streams.delete stream
+      @subscribers_to_all.delete stream
+      tags = @tags.delete stream
+      if tags
+        tags.each do |tag|
+          @subscribers[tag].delete stream
+        end
+      end
+    end
   end
 end

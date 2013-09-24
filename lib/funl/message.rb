@@ -29,6 +29,20 @@ module Funl
       client: nil, local: nil, global: nil, delta: nil, tags: nil, blob: nil)
       new client, local, global, delta, tags, blob
     end
+    
+    def self.control op_type, *args
+      Message.new.tap {|m| m.client_id = [op_type, *args]}
+    end
+
+    # Is this a control packet rather than a data packet?
+    def control?
+      @client_id.kind_of? Array
+    end
+    
+    # Array of [op_type, *args] for the control operation.
+    def control_op
+      @client_id
+    end
 
     def inspect
       d = delta ? "+#{delta}" : nil

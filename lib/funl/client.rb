@@ -44,6 +44,24 @@ module Funl
       seq_read_greeting
     end
 
+    def subscribe tags
+      seq << Message.control("subscribe", tags)
+      ## wait for ack which has tick, ask arc for older messages
+    end
+
+    def subscribe_all
+      seq << Message.control("subscribe_all")
+      ## wait for ack which has tick, ask arc for older messages
+    end
+
+    def unsubscribe tags
+      seq << Message.control("unsubscribe", tags)
+    end
+
+    def unsubscribe_all
+      seq << Message.control("unsubscribe_all")
+    end
+
     def cseq_read_client_id
       log.debug "getting client_id from cseq"
       @client_id = cseq.read["client_id"]
