@@ -1,6 +1,11 @@
 require 'object-stream-wrapper'
 
 module Funl
+  SUBSCRIBE       = "subscribe".freeze
+  UNSUBSCRIBE     = "unsubscribe".freeze
+  SUBSCRIBE_ALL   = "subscribe_all".freeze
+  UNSUBSCRIBE_ALL = "unsubscribe_all".freeze
+  
   # Mixin depends on stream_type, log, client_id, message_class.
   module Stream
     def client_stream_for io, type: stream_type

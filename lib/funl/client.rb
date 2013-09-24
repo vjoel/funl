@@ -45,21 +45,21 @@ module Funl
     end
 
     def subscribe tags
-      seq << Message.control("subscribe", tags)
+      seq << Message.control(SUBSCRIBE, tags)
       ## wait for ack which has tick, ask arc for older messages
     end
 
     def subscribe_all
-      seq << Message.control("subscribe_all")
+      seq << Message.control(SUBSCRIBE_ALL)
       ## wait for ack which has tick, ask arc for older messages
     end
 
     def unsubscribe tags
-      seq << Message.control("unsubscribe", tags)
+      seq << Message.control(UNSUBSCRIBE, tags)
     end
 
     def unsubscribe_all
-      seq << Message.control("unsubscribe_all")
+      seq << Message.control(UNSUBSCRIBE_ALL)
     end
 
     def cseq_read_client_id

@@ -123,13 +123,13 @@ module Funl
       log.debug {"#{stream} #{op_type} #{tags}"}
 
       case op_type
-      when "subscribe_to_all"
+      when SUBSCRIBE_ALL
         @subscribers_to_all += [stream]
         ack = Message.control(op_type)
         ack.global_tick = tick
         write_succeeds?(ack, stream)
       
-      when "subscribe"
+      when SUBSCRIBE
         tags.each do |tag|
           @subscribers[tag] += [stream]
         end
@@ -138,10 +138,10 @@ module Funl
         ack.global_tick = tick
         write_succeeds?(ack, stream)
 
-      when "unsubscribe_from_all"
-        @subscribers_to_all.delete? stream
+      when UNSUBSCRIBE_ALL
+        @subscribers_to_all.delete stream
 
-      when "unsubscribe"
+      when UNSUBSCRIBE
         tags.each do |tag|
           @subscribers[tag].delete stream
         end

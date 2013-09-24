@@ -48,7 +48,7 @@ class TestMessageSequencer < Minitest::Test
       conn = UNIXSocket.new(@path)
       stream = ObjectStreamWrapper.new(conn, type: stream_type)
       stream.write_to_outbox({"client_id" => "test_later_conns"})
-      stream.write(Message.control("subscribe_to_all"))
+      stream.write(Message.control(SUBSCRIBE_ALL))
       global_tick = stream.read["tick"]
       assert_equal 0, global_tick
 
@@ -110,7 +110,7 @@ class TestMessageSequencer < Minitest::Test
       conn = UNIXSocket.new(path)
       stream = ObjectStreamWrapper.new(conn, type: mseq.stream_type)
       stream.write_to_outbox({"client_id" => "test_persist"}) # not needed
-      stream.write(Message.control("subscribe_to_all"))
+      stream.write(Message.control(SUBSCRIBE_ALL))
       tick = stream.read["tick"]
       assert_equal n_write, tick
 

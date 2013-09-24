@@ -40,7 +40,7 @@ class TestSubscribe < Minitest::Test
 
   def test_single_tag
     snd, rcv = @streams
-    rcv << Message.control("subscribe", ["foo"])
+    rcv << Message.control(SUBSCRIBE, ["foo"])
     ack = rcv.read
     assert ack.control?
     assert_equal 0, ack.global_tick
@@ -59,7 +59,7 @@ class TestSubscribe < Minitest::Test
   
   def test_multiple_tag
     snd, rcv = @streams
-    rcv << Message.control("subscribe", ["foo", "bar"])
+    rcv << Message.control(SUBSCRIBE, ["foo", "bar"])
     ack = rcv.read
     assert ack.control?
     assert_equal 0, ack.global_tick
@@ -82,7 +82,7 @@ class TestSubscribe < Minitest::Test
   def test_multiple_receiver
     snd, rcv = @streams
     @streams.each do |stream|
-      stream << Message.control("subscribe", ["foo"])
+      stream << Message.control(SUBSCRIBE, ["foo"])
       ack = stream.read
       assert ack.control?
       assert_equal 0, ack.global_tick
@@ -101,7 +101,7 @@ class TestSubscribe < Minitest::Test
 
   def test_unsubscribe
     snd, rcv = @streams
-    rcv << Message.control("subscribe", ["foo"])
+    rcv << Message.control(SUBSCRIBE, ["foo"])
     ack = rcv.read
     assert ack.control?
     assert_equal 0, ack.global_tick
@@ -114,15 +114,15 @@ class TestSubscribe < Minitest::Test
     assert_equal 1, m.global_tick
     assert_equal ["foo"], m.tags
 
-    rcv << Message.control("unsubscribe", ["foo"])
+    rcv << Message.control(UNSUBSCRIBE, ["foo"])
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
       tags: ["foo"], blob: ""]
     
-    sleep 0.1
+    sleep 0.2
     
-    rcv << Message.control("subscribe", ["foo"])
+    rcv << Message.control(SUBSCRIBE, ["foo"])
     ack = rcv.read
     assert ack.control?
     assert_equal 2, ack.global_tick
@@ -138,7 +138,7 @@ class TestSubscribe < Minitest::Test
   
   def test_subscribe_all
     snd, rcv = @streams
-    rcv << Message.control("subscribe_all")
+    rcv << Message.control(SUBSCRIBE_ALL)
     ack = rcv.read
     assert ack.control?
     assert_equal 0, ack.global_tick
@@ -151,15 +151,15 @@ class TestSubscribe < Minitest::Test
     assert_equal 1, m.global_tick
     assert_equal ["foo"], m.tags
 
-    rcv << Message.control("unsubscribe_all")
+    rcv << Message.control(UNSUBSCRIBE_ALL)
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
       tags: ["foo"], blob: ""]
     
-    sleep 0.1
+    sleep 0.2
     
-    rcv << Message.control("subscribe_all")
+    rcv << Message.control(SUBSCRIBE_ALL)
     ack = rcv.read
     assert ack.control?
     assert_equal 2, ack.global_tick
