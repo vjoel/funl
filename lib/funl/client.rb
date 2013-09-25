@@ -44,20 +44,26 @@ module Funl
       seq_read_greeting
     end
 
+    # Send a subscribe message registering interest in +tags+. Seq will respond
+    # with an ack message containing the tick on which subscription took effect.
     def subscribe tags
       seq << Message.control(SUBSCRIBE, tags)
-      ## wait for ack which has tick, ask arc for older messages
     end
 
+    # Send a subscribe message registering interest in all msgs. Seq will
+    # respond with an ack message containing the tick on which subscription took
+    # effect.
     def subscribe_all
       seq << Message.control(SUBSCRIBE_ALL)
-      ## wait for ack which has tick, ask arc for older messages
     end
 
+    # Unsubscribe from +tags+. No ack.
     def unsubscribe tags
       seq << Message.control(UNSUBSCRIBE, tags)
     end
 
+    # Unsubscribe from all messages. Any tag subscriptions remain in effect.
+    # No ack.
     def unsubscribe_all
       seq << Message.control(UNSUBSCRIBE_ALL)
     end
