@@ -183,17 +183,17 @@ module Funl
       false
     end
     private :write_succeeds?
-  end
 
-  def reject_stream stream
-    stream.close unless stream.closed?
-    if streams.include? stream
-      streams.delete stream
-      @subscribers_to_all.delete stream
-      tags = @tags.delete stream
-      if tags
-        tags.each do |tag|
-          @subscribers[tag].delete stream
+    def reject_stream stream
+      stream.close unless stream.closed?
+      if streams.include? stream
+        streams.delete stream
+        @subscribers_to_all.delete stream
+        tags = @tags.delete stream
+        if tags
+          tags.each do |tag|
+            @subscribers[tag].delete stream
+          end
         end
       end
     end
