@@ -115,12 +115,12 @@ class TestSubscribe < Minitest::Test
     assert_equal ["foo"], m.tags
 
     rcv << Message.control(UNSUBSCRIBE, ["foo"])
+    Thread.pass
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
       tags: ["foo"], blob: ""]
-    
-    sleep 0.2
+    Thread.pass
     
     rcv << Message.control(SUBSCRIBE, ["foo"])
     ack = rcv.read
@@ -152,12 +152,12 @@ class TestSubscribe < Minitest::Test
     assert_equal ["foo"], m.tags
 
     rcv << Message.control(UNSUBSCRIBE_ALL)
+    Thread.pass
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
       tags: ["foo"], blob: ""]
-    
-    sleep 0.2
+    Thread.pass
     
     rcv << Message.control(SUBSCRIBE_ALL)
     ack = rcv.read
