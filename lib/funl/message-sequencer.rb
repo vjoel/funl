@@ -125,18 +125,12 @@ module Funl
       case op_type
       when SUBSCRIBE_ALL
         @subscribers_to_all += [stream]
-        ack = Message.control(op_type)
-        ack.global_tick = tick
-        write_succeeds?(ack, stream)
       
       when SUBSCRIBE
         tags.each do |tag|
           @subscribers[tag] += [stream]
         end
         @tags[stream] += tags
-        ack = Message.control(op_type, tags)
-        ack.global_tick = tick
-        write_succeeds?(ack, stream)
 
       when UNSUBSCRIBE_ALL
         @subscribers_to_all.delete stream
@@ -151,6 +145,10 @@ module Funl
         log.error "bad operation: #{op_type.inspect}"
         return
       end
+
+      ack = Message.control(op_type, *tags)
+      ack.global_tick = tick
+      write_succeeds?(ack, stream)
     end
 
     def handle_message msg

@@ -115,7 +115,9 @@ class TestSubscribe < Minitest::Test
     assert_equal ["foo"], m.tags
 
     rcv << Message.control(UNSUBSCRIBE, ["foo"])
-    Thread.pass
+    ack = rcv.read
+    assert ack.control?
+    assert_equal 1, ack.global_tick
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
@@ -152,7 +154,9 @@ class TestSubscribe < Minitest::Test
     assert_equal ["foo"], m.tags
 
     rcv << Message.control(UNSUBSCRIBE_ALL)
-    Thread.pass
+    ack = rcv.read
+    assert ack.control?
+    assert_equal 1, ack.global_tick
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
