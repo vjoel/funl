@@ -146,7 +146,7 @@ module Funl
         return
       end
 
-      ack = Message.control(op_type, *tags)
+      ack = Message.control(op_type, tags)
       ack.global_tick = tick
       write_succeeds?(ack, stream)
     end

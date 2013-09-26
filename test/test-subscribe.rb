@@ -63,6 +63,7 @@ class TestSubscribe < Minitest::Test
     ack = rcv.read
     assert ack.control?
     assert_equal 0, ack.global_tick
+    assert_equal ["foo", "bar"], ack.control_op[1]
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
@@ -86,6 +87,7 @@ class TestSubscribe < Minitest::Test
       ack = stream.read
       assert ack.control?
       assert_equal 0, ack.global_tick
+      assert_equal ["foo"], ack.control_op[1]
     end
     
     snd << Message[
@@ -105,6 +107,7 @@ class TestSubscribe < Minitest::Test
     ack = rcv.read
     assert ack.control?
     assert_equal 0, ack.global_tick
+    assert_equal ["foo"], ack.control_op[1]
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
@@ -118,6 +121,7 @@ class TestSubscribe < Minitest::Test
     ack = rcv.read
     assert ack.control?
     assert_equal 1, ack.global_tick
+    assert_equal ["foo"], ack.control_op[1]
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
@@ -128,6 +132,7 @@ class TestSubscribe < Minitest::Test
     ack = rcv.read
     assert ack.control?
     assert_equal 2, ack.global_tick
+    assert_equal ["foo"], ack.control_op[1]
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
@@ -144,6 +149,7 @@ class TestSubscribe < Minitest::Test
     ack = rcv.read
     assert ack.control?
     assert_equal 0, ack.global_tick
+    assert_equal nil, ack.control_op[1]
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
@@ -157,6 +163,7 @@ class TestSubscribe < Minitest::Test
     ack = rcv.read
     assert ack.control?
     assert_equal 1, ack.global_tick
+    assert_equal nil, ack.control_op[1]
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
@@ -167,6 +174,7 @@ class TestSubscribe < Minitest::Test
     ack = rcv.read
     assert ack.control?
     assert_equal 2, ack.global_tick
+    assert_equal nil, ack.control_op[1]
     
     snd << Message[
       client: 0, local: 0, global: 0, delta: 1,
