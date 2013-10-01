@@ -10,7 +10,7 @@ include Funl
 require 'minitest/autorun'
 
 class TestClient < Minitest::Test
-  attr_reader :log
+  attr_reader :log, :client
 
   def setup
     @dir = Dir.mktmpdir "funl-test-client-"
@@ -18,33 +18,70 @@ class TestClient < Minitest::Test
     @seq_path = File.join(@dir, "seq")
     @log = Logger.new($stderr)
     log.level = Logger::WARN
-  end
-  
-  def teardown
-    FileUtils.remove_entry @dir
-  end
-  
-  def test_client
-    cseq_sock = UNIXServer.new(@cseq_path)
-    cseq = ClientSequencer.new cseq_sock, log: log
-    cseq.start
+
+    @cseq_sock = UNIXServer.new(@cseq_path)
+    @cseq = ClientSequencer.new @cseq_sock, log: log
+    @cseq.start
     
-    seq_sock = UNIXServer.new(@seq_path)
-    seq = MessageSequencer.new  seq_sock, log: log
-    seq.start
+    @seq_sock = UNIXServer.new(@seq_path)
+    @seq = MessageSequencer.new @seq_sock, log: log
+    @seq.start
     
-    client = Client.new(
+    @client = Client.new(
       seq: UNIXSocket.new(@seq_path),
       cseq: UNIXSocket.new(@cseq_path),
       log: log)
     
-    client.start
-    
+    @client.start
+  end
+  
+  def teardown
+    cseq.stop rescue nil
+    seq.stop rescue nil
+    FileUtils.remove_entry @dir
+  end
+  
+  def test_client_state_at_start
     assert_equal(0, client.client_id)
     assert_equal(0, client.start_tick)
     assert_equal(Funl::Blobber::MSGPACK_TYPE, client.blob_type)
-  ensure
-    cseq.stop rescue nil
-    seq.stop rescue nil
+  end
+  
+  def test_subscription_tracking
+    client.subscribe ["foo"]
+    ack = client.seq.read
+    assert ack.control?
+    assert_equal 0, ack.global_tick
+    
+    assert_equal [], client.subscribed_tags
+    client.handle_ack ack
+    assert_equal ["foo"], client.subscribed_tags
+
+    client.unsubscribe ["foo"]
+    ack = client.seq.read
+    assert ack.control?
+    assert_equal 0, ack.global_tick
+    
+    assert_equal ["foo"], client.subscribed_tags
+    client.handle_ack ack
+    assert_equal [], client.subscribed_tags
+
+    client.subscribe_all
+    ack = client.seq.read
+    assert ack.control?
+    assert_equal 0, ack.global_tick
+    
+    assert_equal false, client.subscribed_all
+    client.handle_ack ack
+    assert_equal true, client.subscribed_all
+
+    client.unsubscribe_all
+    ack = client.seq.read
+    assert ack.control?
+    assert_equal 0, ack.global_tick
+    
+    assert_equal true, client.subscribed_all
+    client.handle_ack ack
+    assert_equal false, client.subscribed_all
   end
 end
