@@ -20,6 +20,8 @@ module Funl
     attr_reader :start_tick
     attr_reader :blob_type
     attr_reader :blobber
+    attr_reader :subscribed_tags
+    attr_reader :subscribed_all
 
     def initialize(seq: seq!, cseq: cseq!, arc: nil,
           log: Logger.new($stderr),
@@ -33,6 +35,9 @@ module Funl
       @seq = client_stream_for(seq)
       @cseq = client_stream_for(cseq)
       @arcio = arc
+      
+      @subscribed_tags = []
+      @subscribed_all = false
     end
 
     # Handshake with both cseq and seq. Does not start any threads--that is left
@@ -66,6 +71,20 @@ module Funl
     # No ack.
     def unsubscribe_all
       seq << Message.control(UNSUBSCRIBE_ALL)
+    end
+    
+    # Maintain subscription status. Must be called by the user (or subclass)
+    # of this class, most likely in the thread created by #start.
+    def handle_ack ack
+      raise ArgumentError unless ack.control?
+      op_type, tags = ack.control_op
+      case op_type
+      when SUBSCRIBE;       @subscribed_tags |= tags
+      when SUBSCRIBE_ALL;   @subscribed_all = true
+      when UNSUBSCRIBE;     @subscribed_tags -= tags
+      when UNSUBSCRIBE_ALL; @subscribed_all = false
+      else raise ArgumentError
+      end
     end
 
     def cseq_read_client_id
