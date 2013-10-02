@@ -2,6 +2,7 @@ require 'logger'
 require 'funl/stream'
 require 'funl/message'
 require 'funl/blobber'
+require 'funl/subscription-tracker'
 
 module Funl
   # Generic client base class. Manages the setup and handshake on the streams
@@ -20,8 +21,6 @@ module Funl
     attr_reader :start_tick
     attr_reader :blob_type
     attr_reader :blobber
-    attr_reader :subscribed_tags
-    attr_reader :subscribed_all
 
     def initialize(seq: seq!, cseq: cseq!, arc: nil,
           log: Logger.new($stderr),
@@ -36,8 +35,7 @@ module Funl
       @cseq = client_stream_for(cseq)
       @arcio = arc
       
-      @subscribed_tags = []
-      @subscribed_all = false
+      @sub_tracker = SubscriptionTracker.new(self)
     end
 
     # Handshake with both cseq and seq. Does not start any threads--that is left
@@ -48,29 +46,44 @@ module Funl
       yield if block_given?
       seq_read_greeting
     end
+    
+    def subscribed_all
+      @sub_tracker.subscribed_all
+    end
+
+    def subscribed_tags
+      @sub_tracker.subscribed_tags
+    end
 
     # Send a subscribe message registering interest in +tags+. Seq will respond
     # with an ack message containing the tick on which subscription took effect.
+    # Waits for the specified +tags+ to be subscribed (assuming #handle_ack is
+    # called regularly, such as in worker thread).
     def subscribe tags
-      seq << Message.control(SUBSCRIBE, tags)
+      @sub_tracker.subscribe tags
     end
 
-    # Send a subscribe message registering interest in all msgs. Seq will
+    # Send a subscribe message registering interest in all messages. Seq will
     # respond with an ack message containing the tick on which subscription took
-    # effect.
+    # effect. Waits for the subscription to start (assuming #handle_ack is
+    # called regularly).
     def subscribe_all
-      seq << Message.control(SUBSCRIBE_ALL)
+      @sub_tracker.subscribe_all
     end
 
-    # Unsubscribe from +tags+. No ack.
+    # Unsubscribe from +tags+. Seq will respond with an ack message containing
+    # the tick on which subscription ended. Waits for the subscription to end
+    # (assuming #handle_ack is called regularly).
     def unsubscribe tags
-      seq << Message.control(UNSUBSCRIBE, tags)
+      @sub_tracker.unsubscribe tags
     end
 
-    # Unsubscribe from all messages. Any tag subscriptions remain in effect.
-    # No ack.
+    # Unsubscribe from all messages. Any tag subscriptions remain in effect. Seq
+    # will respond with an ack message containing the tick on which subscription
+    # ended. Waits for the subscription to end (assuming #handle_ack is called
+    # regularly).
     def unsubscribe_all
-      seq << Message.control(UNSUBSCRIBE_ALL)
+      @sub_tracker.unsubscribe_all
     end
     
     # Maintain subscription status. Must be called by the user (or subclass)
@@ -78,15 +91,9 @@ module Funl
     def handle_ack ack
       raise ArgumentError unless ack.control?
       op_type, tags = ack.control_op
-      case op_type
-      when SUBSCRIBE;       @subscribed_tags |= tags
-      when SUBSCRIBE_ALL;   @subscribed_all = true
-      when UNSUBSCRIBE;     @subscribed_tags -= tags
-      when UNSUBSCRIBE_ALL; @subscribed_all = false
-      else raise ArgumentError
-      end
+      @sub_tracker.update op_type, tags
     end
-
+    
     def cseq_read_client_id
       log.debug "getting client_id from cseq"
       @client_id = cseq.read["client_id"]

@@ -48,40 +48,55 @@ class TestClient < Minitest::Test
   end
   
   def test_subscription_tracking
-    client.subscribe ["foo"]
+    Thread.new do
+      client.subscribe ["foo"]
+    end ## Fiber?
+
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
     
     assert_equal [], client.subscribed_tags
     client.handle_ack ack
+    Thread.pass
     assert_equal ["foo"], client.subscribed_tags
 
-    client.unsubscribe ["foo"]
+    Thread.new do
+      client.unsubscribe ["foo"]
+    end
+
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
     
     assert_equal ["foo"], client.subscribed_tags
     client.handle_ack ack
+    Thread.pass
     assert_equal [], client.subscribed_tags
 
-    client.subscribe_all
+    Thread.new do
+      client.subscribe_all
+    end
+
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
     
     assert_equal false, client.subscribed_all
     client.handle_ack ack
+    Thread.pass
     assert_equal true, client.subscribed_all
 
-    client.unsubscribe_all
+    Thread.new do
+      client.unsubscribe_all
+    end
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
     
     assert_equal true, client.subscribed_all
     client.handle_ack ack
+    Thread.pass
     assert_equal false, client.subscribed_all
   end
 end
