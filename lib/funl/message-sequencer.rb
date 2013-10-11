@@ -108,7 +108,7 @@ module Funl
               if msg.control?
                 handle_control readable, *msg.control_op
               else
-                handle_message msg
+                handle_message msg, readable
               end
             end
           end
@@ -151,7 +151,7 @@ module Funl
       write_succeeds?(ack, stream)
     end
 
-    def handle_message msg
+    def handle_message msg, origin_conn
       log.debug {"handling message #{msg.inspect}"}
 
       @tick += 1
@@ -159,12 +159,23 @@ module Funl
       msg.delta = nil
 
       tags = msg.tags
+      reflect = false
       dest_streams =
         if !tags or (tags.empty? rescue true)
           @subscribers_to_all.dup
         else
+          reflect = tags.delete(true)
           tags.inject(@subscribers_to_all) {|a,tag| a + @subscribers[tag]}
         end
+
+      if reflect
+        log.debug {"reflecting message"}
+        reflect_msg = Message[
+          client: msg.client_id,
+          local:  msg.local_tick,
+          global: msg.global_tick]
+        write_succeeds? reflect_msg, origin_conn
+      end
 
       dest_streams.each do |stream|
         write_succeeds? msg, stream

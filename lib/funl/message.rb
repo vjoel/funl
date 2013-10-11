@@ -15,7 +15,13 @@ module Funl
     # messages are pipelined, delta > 1.
     attr_accessor :delta
 
-    # Application-defined metadata. May be used for filtering etc.
+    # Application-defined metadata. May be used for filtering etc. Must be an
+    # array or nil. If mseq detects +true+ among the tags, then mseq _reflects_
+    # the message: it sends the message back to the sender (minus tags and blob,
+    # and with updated global_tick). This is so that a client can send mseq a
+    # message with tags it does not subscribe to and know when it has arrived.
+    # The +true+ is removed from the tag list before mseq sends it to
+    # subscribers.
     attr_accessor :tags
 
     # Application-defined payload data. See blobber.rb.
