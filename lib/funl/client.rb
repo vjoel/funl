@@ -25,7 +25,8 @@ module Funl
     def initialize(seq: seq!, cseq: cseq!, arc: nil,
           log: Logger.new($stderr),
           stream_type: ObjectStream::MSGPACK_TYPE,
-          message_class: Message)
+          message_class: Message,
+          subscribe: nil)
 
       @log = log
       @stream_type = stream_type ## discover this thru connections
@@ -36,6 +37,7 @@ module Funl
       @arcio = arc
       
       @sub_tracker = SubscriptionTracker.new(self)
+      @initial_subscriptions = subscribe
     end
 
     # Handshake with both cseq and seq. Does not start any threads--that is left
@@ -45,6 +47,13 @@ module Funl
       cseq_read_client_id
       yield if block_given?
       seq_read_greeting
+      
+      case @initial_subscriptions
+      when :all
+        subscribe_all
+      when Array
+        subscribe @initial_subscriptions
+      end
     end
     
     def subscribed_all
