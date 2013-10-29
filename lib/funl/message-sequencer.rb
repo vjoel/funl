@@ -120,7 +120,7 @@ module Funl
     end
 
     def handle_control stream, op_type, tags = nil
-      log.debug {"#{stream} #{op_type} #{tags}"}
+      log.debug {"#{stream.peer_name} #{op_type} #{tags}"}
 
       case op_type
       when SUBSCRIBE_ALL
