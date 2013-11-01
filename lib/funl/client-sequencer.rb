@@ -52,13 +52,14 @@ module Funl
 
     def handle_conn conn
       stream = ObjectStream.new(conn, type: stream_type)
-      msg = {"client_id" => next_id}
+      client_id = next_id
       @next_id += 1
+      msg = {"client_id" => client_id}
       stream << msg
     rescue IOError, SystemCallError => ex
-      log.error "write error for client #{next_id}: #{ex}"
+      log.error "write error for client #{client_id}: #{ex}"
     else
-      log.info "recognized client #{next_id}"
+      log.info "recognized client #{client_id}"
     ensure
       stream.close if stream and not stream.closed?
     end
