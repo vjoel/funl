@@ -124,13 +124,13 @@ module Funl
 
       case op_type
       when SUBSCRIBE_ALL
-        @subscribers_to_all += [stream]
+        @subscribers_to_all |= [stream]
       
       when SUBSCRIBE
         tags.each do |tag|
-          @subscribers[tag] += [stream]
+          @subscribers[tag] |= [stream]
         end
-        @tags[stream] += tags
+        @tags[stream] |= tags
 
       when UNSUBSCRIBE_ALL
         @subscribers_to_all.delete stream
