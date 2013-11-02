@@ -184,4 +184,30 @@ class TestSubscribe < Minitest::Test
     assert_equal 3, m.global_tick
     assert_equal ["foo"], m.tags
   end
+  
+  def test_redundant_subscribe
+    snd, rcv = @streams
+    2.times do
+      rcv << Message.control(SUBSCRIBE, ["foo"])
+      ack = rcv.read
+      assert ack.control?
+    end
+    
+    snd << Message[
+      client: 0, local: 0, global: 0, delta: 1,
+      tags: ["foo"], blob: "1"]
+    snd << Message[
+      client: 0, local: 0, global: 0, delta: 2,
+      tags: ["foo"], blob: "2"]
+    
+    m = rcv.read
+    assert_equal 1, m.global_tick
+    assert_equal ["foo"], m.tags
+    assert_equal "1", m.blob
+    
+    m = rcv.read
+    assert_equal 2, m.global_tick
+    assert_equal ["foo"], m.tags
+    assert_equal "2", m.blob
+  end
 end
