@@ -41,14 +41,15 @@ class BenchmarkEnv
     @dir = Dir.mktmpdir "funl-benchmark-#{name}-"
     @path = File.join(dir, "sock")
     svr = UNIXServer.new(path)
+    s0, s1 = UNIXSocket.pair
     @pid = fork do
-      log.progname = "#{name}-mseq"
-      mseq = MessageSequencer.new svr, log: log,  stream_type: stream_type
-      mseq.start
-      sleep
+      run_server svr, s1
     end
 
     log.progname = "client"
+
+    @mseq_ctrl = ObjectStreamWrapper.new(s0, type: stream_type)
+
     printf "%6s %6s | %s\n", "client", "server", "task"
     puts "-"*60
     tasks.each do |task|
@@ -57,14 +58,48 @@ class BenchmarkEnv
   ensure
     close
   end
-  
+
+  def run_server svr, s
+    log.progname = "#{name}-mseq"
+    mseq = MessageSequencer.new svr, log: log,  stream_type: stream_type
+    mseq.start
+
+    run_control_loop(s)
+  rescue => ex
+    log.error ex
+  end
+
+  def run_control_loop s
+    t0 = Process.times
+    stream = ObjectStreamWrapper.new(s, type: stream_type)
+    loop do
+      stream.read do |msg|
+        case msg
+        when "dt"
+          t1 = Process.times
+          dt = t1.utime + t1.stime - (t0.utime + t0.stime)
+          t0 = t1
+          stream << dt
+        ## when GC start|enable|disable
+        else
+          raise "unknown control message: #{msg.inspect}"
+        end
+      end
+    end
+  end
+
   def run_task task
     t0 = Process.times
+    @mseq_ctrl << "dt"
     task.run method(:make_stream)
     t1 = Process.times
+    @mseq_ctrl << "dt"
+    
+    @mseq_ctrl.read
+    dt = @mseq_ctrl.read
+    
     time = t1.utime + t1.stime - (t0.utime + t0.stime)
-    ctime = t1.cutime + t1.cstime - (t0.cutime + t0.cstime)
-    printf "%6.3f %6.3f | %p\n", time, ctime, task
+    printf "%6.3f %6.3f | %p\n", time, dt, task
   rescue => ex
     log.error "#{task.inspect}: #{ex}"
   end
@@ -86,4 +121,3 @@ class BenchmarkEnv
     FileUtils.remove_entry dir if dir
   end
 end
-
