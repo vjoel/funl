@@ -5,6 +5,7 @@ class MessageRateBenchmarkTask < BenchmarkTask
   def run make_stream
     n_msg = params[:n_msg] || 10
     n_cli = params[:n_cli] || 2
+    cycle_sender = params[:cycle_sender] || false
     
     streams = n_cli.times.map {|i| make_stream[i]}
     threads = n_cli.times.map do |i|
@@ -16,7 +17,8 @@ class MessageRateBenchmarkTask < BenchmarkTask
     end
     
     n_msg.times do |i|
-      streams[i % n_cli] <<
+      stream = cycle_sender ? streams[i % n_cli] : streams[0]
+      stream <<
         Message[client: "1", local: i, global: nil, delta: nil,
           tags: nil, blob: nil]
     end
@@ -30,7 +32,9 @@ if __FILE__ == $0
     WarmupTask.new("warmup"),
     MessageRateBenchmarkTask.new("msg rate", n_msg: 100, n_cli: 2),
     MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 2),
-    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10)
+    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10),
+    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10,
+      cycle_sender: false)
   ])
   
   bme.run
