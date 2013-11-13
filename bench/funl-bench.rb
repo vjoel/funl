@@ -82,6 +82,7 @@ class BenchmarkEnv
 
   def close
     Process.kill "TERM", @pid if @pid
+    Process.waitpid @pid
     FileUtils.remove_entry dir if dir
   end
 end
