@@ -28,13 +28,34 @@ class MessageRateBenchmarkTask < BenchmarkTask
 end
 
 if __FILE__ == $0
-  bme = BenchmarkEnv.new("msg-rate", tasks: [
+  bme = BenchmarkEnv.new("msg-rate",
+    mseq_class: MessageSequencerSelect,
+    tasks: [
     WarmupTask.new("warmup"),
     MessageRateBenchmarkTask.new("msg rate", n_msg: 100, n_cli: 2),
     MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 2),
-    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10),
-    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10,
-      cycle_sender: false)
+    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10)#,
+#    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10,
+#      cycle_sender: false),
+#
+#    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 100)
+  ])
+  
+  bme.run
+  
+  puts
+
+  bme = BenchmarkEnv.new("msg-rate",
+    mseq_class: MessageSequencerNio,
+    tasks: [
+    WarmupTask.new("warmup"),
+    MessageRateBenchmarkTask.new("msg rate", n_msg: 100, n_cli: 2),
+    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 2),
+    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10)#,
+#    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 10,
+#      cycle_sender: false),
+#
+#    MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 100)
   ])
   
   bme.run

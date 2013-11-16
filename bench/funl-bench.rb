@@ -1,4 +1,5 @@
-require 'funl/message-sequencer'
+require 'funl/message-sequencer-select'
+require 'funl/message-sequencer-nio'
 require 'socket'
 require 'tmpdir'
 
@@ -27,14 +28,16 @@ end
 
 # All clients run in the same process; mseq server is in a child process.
 class BenchmarkEnv
-  attr_reader :name, :dir, :path, :log, :stream_type, :tasks
+  attr_reader :name, :dir, :path, :log, :stream_type, :tasks, :mseq_class
 
-  def initialize name, tasks: [], stream_type: ObjectStream::MSGPACK_TYPE
+  def initialize name, tasks: [], stream_type: ObjectStream::MSGPACK_TYPE,
+        mseq_class: MessageSequencer
     @name = name
     @log = Logger.new($stderr)
     log.level = Logger::WARN
     @stream_type = stream_type
     @tasks = tasks
+    @mseq_class = mseq_class
   end
 
   def run
@@ -61,7 +64,8 @@ class BenchmarkEnv
 
   def run_server svr, s
     log.progname = "#{name}-mseq"
-    mseq = MessageSequencer.new svr, log: log,  stream_type: stream_type
+    mseq = mseq_class.new svr, log: log,  stream_type: stream_type
+    puts mseq.class
     mseq.start
 
     run_control_loop(s)
