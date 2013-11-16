@@ -1,4 +1,13 @@
 require 'funl/message-sequencer'
+
+have_nio = begin
+  require 'funl/message-sequencer-nio'
+rescue LoadError
+  false
+else
+  true
+end
+
 require 'socket'
 require 'tmpdir'
 
@@ -8,6 +17,8 @@ require 'minitest/autorun'
 
 class TestMessageSequencer < Minitest::Test
   attr_reader :log
+  
+  def mseq_class; MessageSequencer; end
 
   def setup
     @dir = Dir.mktmpdir "funl-test-mseq-"
@@ -24,7 +35,7 @@ class TestMessageSequencer < Minitest::Test
   def test_initial_conns
     as = []; bs = []
     @n_clients.times {a, b = UNIXSocket.pair; as << a; bs << b}
-    mseq = MessageSequencer.new nil, *as, log: log
+    mseq = mseq_class.new nil, *as, log: log
     bs.each_with_index do |b, i|
       stream = ObjectStreamWrapper.new(b, type: mseq.stream_type)
       stream.write_to_outbox({"client_id" => "test_initial_conns #{i}"})
@@ -38,7 +49,7 @@ class TestMessageSequencer < Minitest::Test
     svr = UNIXServer.new(@path)
     pid = fork do
       log.progname = "mseq"
-      mseq = MessageSequencer.new svr, log: log,  stream_type: stream_type
+      mseq = mseq_class.new svr, log: log,  stream_type: stream_type
       mseq.start
       sleep
     end
@@ -103,8 +114,7 @@ class TestMessageSequencer < Minitest::Test
 
       path = "#{@path}-#{i}"
       svr = UNIXServer.new(path)
-      mseq = Funl::MessageSequencer.new svr, log: log,
-        tick: saved_tick
+      mseq = mseq_class.new svr, log: log, tick: saved_tick
       mseq.start
 
       conn = UNIXSocket.new(path)
@@ -130,5 +140,11 @@ class TestMessageSequencer < Minitest::Test
 
   ensure
     mseq.stop rescue nil
+  end
+end
+
+if have_nio
+  class TestMessageSequencerNio < TestMessageSequencer
+    def mseq_class; MessageSequencerNio; end
   end
 end
