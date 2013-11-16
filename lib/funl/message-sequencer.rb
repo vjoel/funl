@@ -22,7 +22,7 @@ module Funl
     def self.new *a
       if self == MessageSequencer
         require 'funl/message-sequencer-select'
-        MessageSequencerSelect.new *a ###
+        MessageSequencerSelect.new *a
       else
         super
       end
@@ -71,6 +71,57 @@ module Funl
 
     def wait
       server_thread.join
+    end
+    
+    def run
+      loop do
+        select_streams
+      end
+    rescue => ex
+      log.error ex
+      raise
+    end
+
+    private
+
+    def accept_conn
+      conn, addr = server.accept_nonblock
+      log.debug {"accepted #{conn.inspect} from #{addr.inspect}"}
+      try_conn conn
+    rescue IO::WaitReadable
+    end
+
+    def try_conn conn
+      stream = message_server_stream_for(conn)
+      current_greeting = greeting.merge({"tick" => tick})
+      if write_succeeds?(current_greeting, stream)
+        log.debug {"connected #{stream.inspect}"}
+        register_stream stream
+      end
+    end
+
+    def read_conn readable
+      log.debug {"readable = #{readable}"}
+      begin
+        msgs = []
+        readable.read do |msg|
+          msgs << msg
+        end
+      rescue IOError, SystemCallError => ex
+        log.debug {"closing #{readable}: #{ex}"}
+        reject_stream readable
+      else
+        log.debug {
+          "read #{msgs.size} messages from #{readable.peer_name}"}
+      end
+
+      msgs.each do |msg|
+        if msg.control?
+          handle_control readable, *msg.control_op
+        else
+          handle_message msg, readable
+        end
+      end
     end
 
     def handle_control stream, op_type, tags = nil
@@ -135,7 +186,6 @@ module Funl
         write_succeeds? msg, stream
       end
     end
-    private :handle_message
 
     def write_succeeds? data, stream
       stream << data
@@ -145,6 +195,19 @@ module Funl
       reject_stream stream
       false
     end
-    private :write_succeeds?
+
+    def reject_stream stream
+      stream.close unless stream.closed?
+      if registered_stream? stream
+        deregister_stream stream
+        @subscribers_to_all.delete stream
+        tags = @tags.delete stream
+        if tags
+          tags.each do |tag|
+            @subscribers[tag].delete stream
+          end
+        end
+      end
+    end
   end
 end
