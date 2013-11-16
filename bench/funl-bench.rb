@@ -30,15 +30,20 @@ end
 class BenchmarkEnv
   attr_reader :name, :dir, :path, :log, :stream_type, :tasks, :mseq_class
 
-  def initialize name, tasks: [], stream_type: ObjectStream::MSGPACK_TYPE,
+  def initialize name, stream_type: ObjectStream::MSGPACK_TYPE,
         mseq_class: MessageSequencer
     @name = name
     @log = Logger.new($stderr)
     log.level = Logger::WARN
     @stream_type = stream_type
-    @tasks = tasks
+    @tasks = []
     @mseq_class = mseq_class
   end
+
+  def add_task task
+    @tasks << task
+  end
+  alias << add_task
 
   def run
     @dir = Dir.mktmpdir "funl-benchmark-#{name}-"
@@ -53,6 +58,7 @@ class BenchmarkEnv
 
     @mseq_ctrl = ObjectStreamWrapper.new(s0, type: stream_type)
 
+    puts mseq_class
     printf "%6s %6s | %s\n", "client", "server", "task"
     puts "-"*60
     tasks.each do |task|
@@ -65,7 +71,6 @@ class BenchmarkEnv
   def run_server svr, s
     log.progname = "#{name}-mseq"
     mseq = mseq_class.new svr, log: log,  stream_type: stream_type
-    puts mseq.class
     mseq.start
 
     run_control_loop(s)
