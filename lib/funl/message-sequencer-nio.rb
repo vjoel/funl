@@ -9,8 +9,10 @@ module Funl
     
     def init_selector
       @selector = NIO::Selector.new
-      monitor = selector.register server, :r
-      monitor.value = proc {accept_conn}
+      if server
+        monitor = selector.register server, :r
+        monitor.value = proc {accept_conn}
+      end
     end
 
     def register_stream stream
