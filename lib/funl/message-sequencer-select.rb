@@ -1,14 +1,12 @@
-require 'nio'
+require 'logger'
 require 'funl/message-sequencer'
 
 module Funl
-  class MessageSequencerNio < MessageSequencer
-    attr_reader :selector
+  class MessageSequencerSelect < MessageSequencer
+    attr_reader :streams
     
     def init_selector
-      @selector = NIO::Selector.new
-      monitor = selector.register server, :r
-      monitor.value = proc {accept_conn}
+      @streams = []
     end
 
     def try_conn conn
@@ -16,8 +14,7 @@ module Funl
       current_greeting = greeting.merge({"tick" => tick})
       if write_succeeds?(current_greeting, stream)
         log.debug {"connected #{stream.inspect}"}
-        monitor = selector.register stream, :r
-        monitor.value = proc {read_conn stream}
+        streams << stream
       end
     end
     private :try_conn
@@ -57,7 +54,16 @@ module Funl
 
     def run
       loop do
-        selector.select { |monitor| monitor.value.call(monitor) }
+        readables, _ = select [server, *streams]
+
+        readables.each do |readable|
+          case readable
+          when server
+            accept_conn
+          else
+            read_conn readable
+          end
+        end
       end
     rescue => ex
       log.error ex
@@ -66,8 +72,8 @@ module Funl
 
     def reject_stream stream
       stream.close unless stream.closed?
-      if selector.registered? stream
-        selector.deregister stream
+      if streams.include? stream
+        streams.delete stream
         @subscribers_to_all.delete stream
         tags = @tags.delete stream
         if tags
