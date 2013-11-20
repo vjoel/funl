@@ -27,4 +27,5 @@ Gem::Specification.new do |s|
   s.summary = "Sequences messages"
 
   s.add_dependency 'object-stream'
+  s.add_dependency 'nio4r'
 end
