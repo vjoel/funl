@@ -53,7 +53,7 @@ EasyServe.start do |ez|
     client.start do
       log.progname = "client #\#{client.client_id} on \#{host}"
     end
-    
+
     Thread.new do
       client.subscribe_all
     end
@@ -70,4 +70,32 @@ EasyServe.start do |ez|
     raise if msg.control?
     log.info "received \#{msg.inspect}:\#{msg.blob.inspect}"
   }
+
+  # For comparison, here's a child process on the same host as the servers.
+  ez.child :seqd, :cseqd do |seqd, cseqd|
+    require 'funl/client'
+
+    log.progname = "client (starting) on #{host}"
+
+    client = Funl::Client.new(seq: seqd, cseq: cseqd, log: log)
+    client.start do
+      log.progname = "client ##{client.client_id} on #{host}"
+    end
+
+    Thread.new do
+      client.subscribe_all
+    end
+
+    msg = client.seq.read
+    raise unless msg.control?
+    client.handle_ack msg
+    log.info "subscribed"
+
+    msg = Funl::Message[client: client.client_id, blob: "Bar"]
+    client.seq << msg
+    log.info "sent #{msg.inspect}:#{msg.blob.inspect}"
+    msg = client.seq.read
+    raise if msg.control?
+    log.info "received #{msg.inspect}:#{msg.blob.inspect}"
+  end
 end
