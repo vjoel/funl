@@ -27,16 +27,16 @@ EasyServe.start do |ez|
   log.level = Logger::INFO
   log.formatter = nil if $VERBOSE
 
-  ez.start_servers do
+  ez.start_services do
     svhost = tunnel ? "localhost" : nil # no need to expose port if tunnelled
 
-    ez.server :seqd, :tcp, svhost, 0 do |svr|
+    ez.service :seqd, :tcp, bind_host: svhost do |svr|
       require 'funl/message-sequencer'
       seq = Funl::MessageSequencer.new svr, log: log
       seq.start
     end
 
-    ez.server :cseqd, :tcp, svhost, 0 do |svr|
+    ez.service :cseqd, :tcp, bind_host: svhost do |svr|
       require 'funl/client-sequencer'
       cseq = Funl::ClientSequencer.new svr, log: log
       cseq.start
@@ -71,7 +71,7 @@ EasyServe.start do |ez|
     log.info "received \#{msg.inspect}:\#{msg.blob.inspect}"
   }
 
-  # For comparison, here's a child process on the same host as the servers.
+  # For comparison, here's a child process on the same host as the services.
   ez.child :seqd, :cseqd do |seqd, cseqd|
     require 'funl/client'
 
