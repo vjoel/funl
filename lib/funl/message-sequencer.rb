@@ -107,7 +107,7 @@ module Funl
         readable.read do |msg|
           msgs << msg
         end
-      rescue IOError, SystemCallError => ex
+      rescue StreamError, IOError, SystemCallError => ex
         log.debug {"closing #{readable}: #{ex}"}
         reject_stream readable
       else
