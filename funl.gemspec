@@ -26,6 +26,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.summary = "Sequences messages"
 
-  s.add_dependency 'object-stream'
-  s.add_dependency 'nio4r'
+  s.add_dependency 'object-stream', '~> 0'
+  s.add_dependency 'nio4r', '~> 0'
 end
