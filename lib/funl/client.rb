@@ -21,15 +21,18 @@ module Funl
     attr_reader :start_tick
     attr_reader :blob_type
     attr_reader :blobber
+    attr_reader :symbolize_keys
 
     def initialize(seq: seq!, cseq: cseq!, arc: nil,
           log: Logger.new($stderr),
           stream_type: ObjectStream::MSGPACK_TYPE,
-          message_class: Message)
+          message_class: Message,
+          symbolize_keys: false)
 
       @log = log
       @stream_type = stream_type ## discover this thru connections
       @message_class = message_class
+      @symbolize_keys = symbolize_keys
 
       @seq = client_stream_for(seq)
       @cseq = client_stream_for(cseq)
@@ -109,7 +112,7 @@ module Funl
       log.info "start_tick = #{start_tick}"
       @blob_type = greeting["blob"]
       log.info "blob_type = #{blob_type}"
-      @blobber = Blobber.for(blob_type)
+      @blobber = Blobber.for(blob_type, symbolize_keys: symbolize_keys)
       seq.expect message_class
 
       @arc = @arcio && client_stream_for(@arcio, type: blob_type)
