@@ -115,7 +115,9 @@ module Funl
       @blobber = Blobber.for(blob_type, symbolize_keys: symbolize_keys)
       seq.expect message_class
 
-      @arc = @arcio && client_stream_for(@arcio, type: blob_type)
+      @arc = @arcio &&
+        client_stream_for(@arcio, type: blob_type,
+          symbolize_keys: symbolize_keys)
         # note: @arc is nil when client is the archiver itself
     end
 
