@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.summary = "Sequences messages"
 
+  s.required_ruby_version = Gem::Requirement.new("~> 2.0")
   s.add_dependency 'object-stream', '~> 0'
   s.add_dependency 'nio4r', '~> 0'
 end
