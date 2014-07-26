@@ -17,7 +17,7 @@ require 'minitest/autorun'
 
 class TestMessageSequencer < Minitest::Test
   attr_reader :log
-  
+
   def mseq_class; MessageSequencer; end
 
   def setup
@@ -27,11 +27,11 @@ class TestMessageSequencer < Minitest::Test
     log.level = Logger::WARN
     @n_clients = 3
   end
-  
+
   def teardown
     FileUtils.remove_entry @dir
   end
-  
+
   def test_initial_conns
     as = []; bs = []
     @n_clients.times {a, b = UNIXSocket.pair; as << a; bs << b}
@@ -43,7 +43,7 @@ class TestMessageSequencer < Minitest::Test
       assert_equal 0, global_tick
     end
   end
-  
+
   def test_later_conns
     stream_type = ObjectStream::MSGPACK_TYPE
     svr = UNIXServer.new(@path)
@@ -53,7 +53,7 @@ class TestMessageSequencer < Minitest::Test
       mseq.start
       sleep
     end
-    
+
     log.progname = "client"
     streams = (0...@n_clients).map do
       conn = UNIXSocket.new(@path)
@@ -70,30 +70,30 @@ class TestMessageSequencer < Minitest::Test
 
       stream
     end
-    
+
     m1 = Message[
       client: 0, local: 12, global: 34,
       delta: 1, tags: ["foo"], blob: "BLOB"]
     send_msg(src: streams[0], message: m1, dst: streams, expected_tick: 1)
-    
+
     if @n_clients > 1
       m2 = Message[
         client: 1, local: 23, global: 45,
         delta: 4, tags: ["bar"], blob: "BLOB"]
       send_msg(src: streams[1], message: m2, dst: streams, expected_tick: 2)
     end
-    
+
   ensure
     Process.kill "TERM", pid if pid
   end
 
   def send_msg(src: nil, message: nil, dst: nil, expected_tick: nil)
     src << message
-    
+
     replies = dst.map do |stream|
       stream.read
     end
-    
+
     assert_equal @n_clients, replies.size
 
     replies.each do |r|

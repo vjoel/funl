@@ -13,11 +13,11 @@ class TestClientSequencer < Minitest::Test
     @log = Logger.new($stderr)
     log.level = Logger::WARN
   end
-  
+
   def teardown
     FileUtils.remove_entry @dir
   end
-  
+
   def test_initial_conns
     as = []; bs = []
     3.times {a, b = UNIXSocket.pair; as << a; bs << b}
@@ -28,7 +28,7 @@ class TestClientSequencer < Minitest::Test
       assert_equal i, client_id
     end
   end
-  
+
   def test_later_conns
     svr = UNIXServer.new(@path)
     cseq = Funl::ClientSequencer.new svr, log: log

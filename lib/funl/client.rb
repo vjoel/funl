@@ -37,7 +37,7 @@ module Funl
       @seq = client_stream_for(seq)
       @cseq = client_stream_for(cseq)
       @arcio = arc
-      
+
       @sub_tracker = SubscriptionTracker.new(self)
     end
 
@@ -49,7 +49,7 @@ module Funl
       yield if block_given?
       seq_read_greeting
     end
-    
+
     def subscribed_all
       @sub_tracker.subscribed_all
     end
@@ -88,7 +88,7 @@ module Funl
     def unsubscribe_all
       @sub_tracker.unsubscribe_all
     end
-    
+
     # Maintain subscription status. Must be called by the user (or subclass)
     # of this class, most likely in the thread created by #start.
     def handle_ack ack
@@ -96,7 +96,7 @@ module Funl
       op_type, tags = ack.control_op
       @sub_tracker.update op_type, tags
     end
-    
+
     def cseq_read_client_id
       log.debug "getting client_id from cseq"
       @client_id = cseq.read["client_id"]

@@ -7,7 +7,7 @@ require 'minitest/autorun'
 
 class TestStream < Minitest::Test
   include Funl::Stream
-  
+
   attr_reader :client_id
   attr_reader :stream_type
   attr_reader :message_class
@@ -23,16 +23,16 @@ class TestStream < Minitest::Test
 
     @sio = StringIO.new
   end
-  
+
   def test_greeting
     client = client_stream_for @sio
     client.write "message"
-    
+
     @sio.rewind
 
     server = server_stream_for @sio
     m = server.read
-    
+
     assert_equal "message", m
     assert_equal "client #{client_id}", server.peer_name
   end

@@ -25,7 +25,7 @@ module Funl
         end
       end
     end
-    
+
     def message_server_stream_for io, type: stream_type, **opts
       ObjectStreamWrapper.new(io, type: type, **opts).tap do |stream|
         stream.consume do |h|

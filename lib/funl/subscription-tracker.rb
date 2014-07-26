@@ -6,7 +6,7 @@ module Funl
   class SubscriptionTracker
     attr_reader :client
     attr_reader :subscribed_all
-    
+
     def subscribed_tags
       @subscribed_tags.dup
     end

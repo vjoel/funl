@@ -26,7 +26,7 @@ module Funl
         MessagePack.dump arg
       end
     end
-    
+
     # Returns something which responds to #dump(obj) and #load(str).
     def self.for type, symbolize_keys: false
       case type

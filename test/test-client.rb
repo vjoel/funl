@@ -22,31 +22,31 @@ class TestClient < Minitest::Test
     @cseq_sock = UNIXServer.new(@cseq_path)
     @cseq = ClientSequencer.new @cseq_sock, log: log
     @cseq.start
-    
+
     @seq_sock = UNIXServer.new(@seq_path)
     @seq = MessageSequencer.new @seq_sock, log: log
     @seq.start
-    
+
     @client = Client.new(
       seq: UNIXSocket.new(@seq_path),
       cseq: UNIXSocket.new(@cseq_path),
       log: log)
-    
+
     @client.start
   end
-  
+
   def teardown
     cseq.stop rescue nil
     seq.stop rescue nil
     FileUtils.remove_entry @dir
   end
-  
+
   def test_client_state_at_start
     assert_equal(0, client.client_id)
     assert_equal(0, client.start_tick)
     assert_equal(Funl::Blobber::MSGPACK_TYPE, client.blob_type)
   end
-  
+
   def test_subscription_tracking
     Thread.new do
       client.subscribe ["foo"]
@@ -55,7 +55,7 @@ class TestClient < Minitest::Test
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
-    
+
     assert_equal [], client.subscribed_tags
     client.handle_ack ack
     Thread.pass
@@ -68,7 +68,7 @@ class TestClient < Minitest::Test
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
-    
+
     assert_equal ["foo"], client.subscribed_tags
     client.handle_ack ack
     Thread.pass
@@ -81,7 +81,7 @@ class TestClient < Minitest::Test
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
-    
+
     assert_equal false, client.subscribed_all
     client.handle_ack ack
     Thread.pass
@@ -93,7 +93,7 @@ class TestClient < Minitest::Test
     ack = client.seq.read
     assert ack.control?
     assert_equal 0, ack.global_tick
-    
+
     assert_equal true, client.subscribed_all
     client.handle_ack ack
     Thread.pass

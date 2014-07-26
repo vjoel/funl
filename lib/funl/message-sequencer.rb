@@ -22,12 +22,12 @@ module Funl
     def self.new *a
       if self == MessageSequencer
         require 'funl/message-sequencer-select'
-        MessageSequencerSelect.new *a
+        MessageSequencerSelect.new(*a)
       else
         super
       end
     end
-    
+
     def initialize server, *conns, log: Logger.new($stderr),
         stream_type: ObjectStream::MSGPACK_TYPE,
         message_class: Message,
@@ -47,7 +47,7 @@ module Funl
       conns.each do |conn|
         try_conn conn
       end
-      
+
       @subscribers_to_all = [] # [conn, ...]
       @subscribers = Hash.new {|h, tag| h[tag] = []} # tag => [conn, ...]
       @tags = Hash.new {|h, conn| h[conn] = []} # conn => [tag, ...]
@@ -72,7 +72,7 @@ module Funl
     def wait
       server_thread.join
     end
-    
+
     def run
       loop do
         select_streams
@@ -130,7 +130,7 @@ module Funl
       case op_type
       when SUBSCRIBE_ALL
         @subscribers_to_all |= [stream]
-      
+
       when SUBSCRIBE
         tags.each do |tag|
           @subscribers[tag] |= [stream]

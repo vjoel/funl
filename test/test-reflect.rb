@@ -11,7 +11,7 @@ class TestReflect < Minitest::Test
   def setup
     @log = Logger.new($stderr)
     log.level = Logger::WARN
-    
+
     client_socks = []
     server_socks = []
     2.times do
@@ -19,21 +19,21 @@ class TestReflect < Minitest::Test
       client_socks << cl
       server_socks << sv
     end
-    
+
     dummy, _ = UNIXSocket.pair
 
     @mseq = MessageSequencer.new dummy, *server_socks, log: log
     mseq.start
-    
+
     @streams = client_socks.each_with_index.map do |s,i|
       stream = ObjectStreamWrapper.new(s, type: mseq.stream_type)
       stream.write_to_outbox({"client_id" => "client #{i}"})
-      global_tick = stream.read["tick"]
+      stream.read["tick"]
       stream.expect Message
       stream
     end
   end
-  
+
   def teardown
     mseq.stop rescue nil
   end
@@ -45,14 +45,14 @@ class TestReflect < Minitest::Test
     assert ack.control?
     assert_equal 0, ack.global_tick
     reflect = true
-    
+
     snd << Message[
       client: 0, local: 1, global: 0, delta: 1,
       tags: [reflect, "bar"], blob: ""]
     snd << Message[
       client: 0, local: 2, global: 0, delta: 2,
       tags: [reflect, "foo"], blob: ""]
-    
+
     m = rcv.read
     assert_equal 2, m.global_tick
     assert_equal ["foo"], m.tags

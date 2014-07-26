@@ -6,7 +6,7 @@ class MessageRateBenchmarkTask < BenchmarkTask
     n_msg = params[:n_msg] || 10
     n_cli = params[:n_cli] || 2
     cycle_sender = params[:cycle_sender] || false
-    
+
     streams = n_cli.times.map {|i| make_stream[i]}
     threads = n_cli.times.map do |i|
       Thread.new do
@@ -15,14 +15,14 @@ class MessageRateBenchmarkTask < BenchmarkTask
         end
       end
     end
-    
+
     n_msg.times do |i|
       stream = cycle_sender ? streams[i % n_cli] : streams[0]
       stream <<
         Message[client: "1", local: i, global: nil, delta: nil,
           tags: nil, blob: nil]
     end
-    
+
     threads.each {|th| th.join}
   end
 end
@@ -39,7 +39,7 @@ if __FILE__ == $0
 #  b_sel << MessageRateBenchmarkTask.new("msg rate", n_msg: 1000, n_cli: 100)
 
   b_sel.run
-  
+
   puts
 
   b_nio = BenchmarkEnv.new("msg-rate", mseq_class: MessageSequencerNio)

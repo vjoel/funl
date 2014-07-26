@@ -12,7 +12,7 @@ class BenchmarkTask
     @name = name
     @params = params
   end
-  
+
   def inspect
     ps = params.map{|k,v| "#{k}: #{v}" }
     pstr = ps.empty? ? "" : " " + ps.join(', ')
@@ -103,10 +103,10 @@ class BenchmarkEnv
     task.run method(:make_stream)
     t1 = Process.times
     @mseq_ctrl << "dt"
-    
+
     @mseq_ctrl.read
     dt = @mseq_ctrl.read
-    
+
     time = t1.utime + t1.stime - (t0.utime + t0.stime)
     printf "%6.3f %6.3f | %p\n", time, dt, task
   rescue => ex
